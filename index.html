@@ -1,0 +1,2680 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <title>Verba Captāre – Der Formen-Fänger (Lektion 16)</title>
+  <style>
+    /* ==========================================================================
+       DESIGN-TOKENS & BASIS-STYLES (100 % Offline, Antikes Farbdesign)
+       Pergament, Terrakotta, Gold, Lorbeergrün & Tiefblau
+       ========================================================================== */
+    :root {
+      --bg-parchment: #FDF6E3;
+      --bg-parchment-dark: #F2E2BC;
+      --card-bg: #FFFDF7;
+      --deep-blue: #1F3A52;
+      --deep-blue-light: #EBF1F6;
+      --crimson: #8B2635;
+      --crimson-dark: #631823;
+      --crimson-light: #F9EBEF;
+      --terracotta: #C85A32;
+      --gold: #D4AF37;
+      --gold-dark: #9E7B16;
+      --gold-light: #FCF5DC;
+      --laurel: #1E7E4E;
+      --laurel-bg: #E6F6EE;
+      --slate: #1E2D3B;
+      --slate-muted: #526475;
+      --border-subtle: rgba(31, 58, 82, 0.22);
+      --shadow-card: 0 12px 32px rgba(31, 58, 82, 0.22);
+      --font-serif: Georgia, 'Times New Roman', Times, serif;
+      --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      height: 100dvh;
+      overflow: hidden;
+      background-color: var(--bg-parchment);
+      color: var(--slate);
+      font-family: var(--font-sans);
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      touch-action: manipulation;
+    }
+
+    button {
+      touch-action: manipulation;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    #app {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      height: 100%;
+      height: 100dvh;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* ==========================================================================
+       OBERES HUD-BANNER (5 Leben, Fortschritt X/10, Punkte, Aufgabe & Slots)
+       ========================================================================== */
+    #hud {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: max(8px, env(safe-area-inset-top)) 14px 8px 14px;
+      background: linear-gradient(180deg, #FFFDF8 0%, #F5E8C8 100%);
+      border-bottom: 3px solid var(--gold);
+      box-shadow: 0 3px 12px rgba(31, 58, 82, 0.12);
+      z-index: 10;
+    }
+
+    /* Linke HUD-Sektion: 5 Herzen, Aufgabe X/10 & Punkte */
+    .hud-stats {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      min-width: 132px;
+    }
+
+    .hearts-row {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .heart-icon {
+      width: 21px;
+      height: 20px;
+      transition: transform 0.25s ease, opacity 0.25s ease;
+    }
+
+    .heart-icon.lost {
+      opacity: 0.2;
+      transform: scale(0.78);
+      filter: grayscale(100%);
+    }
+
+    .score-pills {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+
+    .stat-pill {
+      background: var(--card-bg);
+      border: 1.5px solid var(--border-subtle);
+      border-radius: 9px;
+      padding: 2px 7px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--deep-blue);
+      white-space: nowrap;
+    }
+
+    .stat-pill span {
+      color: var(--crimson);
+    }
+
+    /* Mittlere HUD-Sektion: Grammatik-Badge, Subjekt, Prädikat & Sammel-Slots */
+    .task-card {
+      flex: 1;
+      max-width: 600px;
+      background: var(--card-bg);
+      border: 2px solid var(--gold);
+      border-radius: 14px;
+      padding: 5px 12px 6px 12px;
+      box-shadow: 0 3px 10px rgba(31, 58, 82, 0.08);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .grammar-meta-badge {
+      display: inline-block;
+      background: var(--deep-blue-light);
+      color: var(--deep-blue);
+      border: 1px solid rgba(31, 58, 82, 0.22);
+      font-size: 0.73rem;
+      font-weight: 800;
+      letter-spacing: 0.2px;
+      padding: 1px 10px;
+      border-radius: 999px;
+      margin-bottom: 4px;
+    }
+
+    .task-prompt-line {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 5px 10px;
+      margin-bottom: 5px;
+    }
+
+    .subject-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: var(--deep-blue);
+      color: #FFFDF7;
+      font-family: var(--font-serif);
+      font-size: 1.03rem;
+      font-weight: 700;
+      padding: 2px 12px;
+      border-radius: 999px;
+      border: 1.5px solid var(--gold);
+    }
+
+    .predicate-german {
+      font-size: 0.96rem;
+      font-weight: 700;
+      color: var(--slate);
+    }
+
+    .slots-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+    }
+
+    .slot-box {
+      min-width: 112px;
+      padding: 3px 12px;
+      border-radius: 9px;
+      border: 2px dashed #B8A582;
+      background: #FAF3E0;
+      color: #7D6E52;
+      font-family: var(--font-serif);
+      font-size: 0.95rem;
+      font-weight: 700;
+      transition: all 0.2s ease;
+    }
+
+    .slot-box.filled {
+      border-style: solid;
+      border-color: var(--laurel);
+      background: var(--laurel-bg);
+      color: var(--laurel);
+      transform: scale(1.03);
+      box-shadow: 0 2px 8px rgba(30, 126, 78, 0.2);
+    }
+
+    .slot-plus {
+      font-weight: 800;
+      color: var(--gold-dark);
+      font-size: 1rem;
+    }
+
+    /* Rechte HUD-Sektion: Pause, Ton & Menü */
+    .hud-controls {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .hud-btn {
+      min-width: 44px;
+      min-height: 44px;
+      padding: 0 10px;
+      border-radius: 12px;
+      border: 1.5px solid var(--border-subtle);
+      background: var(--card-bg);
+      color: var(--deep-blue);
+      font-size: 0.86rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    }
+
+    .hud-btn:active {
+      transform: scale(0.95);
+      background: var(--gold-light);
+    }
+
+    /* ==========================================================================
+       SPIELFELD (CANVAS) & ERFOLGS-TOAST
+       ========================================================================== */
+    #canvas-wrapper {
+      flex: 1;
+      position: relative;
+      width: 100%;
+      overflow: hidden;
+      touch-action: none;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+    }
+
+    #success-toast {
+      position: absolute;
+      top: 12%;
+      left: 50%;
+      transform: translate(-50%, -10px) scale(0.95);
+      width: min(92%, 530px);
+      background: linear-gradient(135deg, #1E7E4E 0%, #145736 100%);
+      color: #FFFFFF;
+      border: 3px solid var(--gold);
+      border-radius: 18px;
+      padding: 13px 18px;
+      text-align: center;
+      box-shadow: 0 14px 34px rgba(20, 87, 54, 0.36);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      z-index: 20;
+    }
+
+    #success-toast.visible {
+      opacity: 1;
+      transform: translate(-50%, 0) scale(1);
+    }
+
+    .toast-badge {
+      display: inline-block;
+      background: var(--gold);
+      color: #241B05;
+      font-weight: 800;
+      font-size: 0.75rem;
+      letter-spacing: 0.5px;
+      padding: 2px 10px;
+      border-radius: 999px;
+      margin-bottom: 5px;
+      text-transform: uppercase;
+    }
+
+    .toast-latin {
+      font-family: var(--font-serif);
+      font-size: 1.22rem;
+      font-weight: 700;
+      margin: 2px 0;
+    }
+
+    .toast-german {
+      font-size: 0.94rem;
+      opacity: 0.96;
+    }
+
+    /* ==========================================================================
+       MODALS / OVERLAYS
+       ========================================================================== */
+    .overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(31, 58, 82, 0.64);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 14px;
+      z-index: 50;
+    }
+
+    .overlay.hidden {
+      display: none !important;
+    }
+
+    .modal-card {
+      width: 100%;
+      max-width: 620px;
+      max-height: 94dvh;
+      overflow-y: auto;
+      background: var(--card-bg);
+      border: 3px solid var(--gold);
+      border-radius: 22px;
+      padding: 20px 22px;
+      box-shadow: var(--shadow-card);
+      text-align: center;
+      position: relative;
+    }
+
+    .emblem-wrap {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 6px;
+    }
+
+    .game-title {
+      font-family: var(--font-serif);
+      font-size: clamp(1.5rem, 4vw, 2rem);
+      color: var(--deep-blue);
+      margin: 0 0 3px 0;
+      line-height: 1.15;
+    }
+
+    .game-subtitle {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--terracotta);
+      margin: 0 0 10px 0;
+    }
+
+    .intro-text {
+      background: var(--bg-parchment);
+      border: 1.5px solid var(--border-subtle);
+      border-radius: 14px;
+      padding: 10px 14px;
+      font-size: 0.9rem;
+      line-height: 1.42;
+      color: var(--slate);
+      margin: 0 0 12px 0;
+    }
+
+    /* Gelbe iPad-QuickLook-Hinweisbox (wird von JS sofort ausgeblendet, wenn aktiv) */
+    .quicklook-box {
+      background-color: #FFF3CD;
+      border: 2.5px solid #E0A800;
+      border-radius: 14px;
+      padding: 11px 14px;
+      margin: 0 0 12px 0;
+      color: #533F03;
+      font-size: 0.9rem;
+      font-weight: 700;
+      line-height: 1.4;
+      text-align: left;
+      box-shadow: 0 4px 12px rgba(224, 168, 0, 0.22);
+    }
+
+    /* Stufen-Buttons */
+    .level-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      text-align: left;
+    }
+
+    .level-btn {
+      width: 100%;
+      min-height: 60px;
+      padding: 10px 15px;
+      border-radius: 15px;
+      border: 2px solid var(--border-subtle);
+      background: #FFF;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      box-shadow: 0 3px 10px rgba(31, 58, 82, 0.06);
+    }
+
+    .level-btn:hover, .level-btn:active {
+      border-color: var(--deep-blue);
+      background: var(--deep-blue-light);
+    }
+
+    .level-info h3 {
+      margin: 0 0 2px 0;
+      font-size: 1rem;
+      color: var(--deep-blue);
+    }
+
+    .level-info p {
+      margin: 0;
+      font-size: 0.83rem;
+      color: var(--slate-muted);
+      line-height: 1.3;
+    }
+
+    .level-arrow {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--terracotta);
+      flex-shrink: 0;
+    }
+
+    /* Diagnostisches Fehler-Feedback */
+    .error-header {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--crimson-light);
+      color: var(--crimson);
+      border: 1.5px solid rgba(139, 38, 53, 0.3);
+      padding: 5px 14px;
+      border-radius: 999px;
+      font-weight: 800;
+      font-size: 0.88rem;
+      margin-bottom: 8px;
+    }
+
+    .caught-wrong-word {
+      font-family: var(--font-serif);
+      font-size: 1.55rem;
+      font-weight: 700;
+      color: var(--crimson);
+      margin: 4px 0 8px 0;
+    }
+
+    .error-context {
+      font-size: 0.9rem;
+      color: var(--slate-muted);
+      margin-bottom: 10px;
+    }
+
+    .diagnosis-box {
+      background: var(--gold-light);
+      border-left: 5px solid var(--gold-dark);
+      border-radius: 12px;
+      padding: 12px 14px;
+      text-align: left;
+      font-size: 0.95rem;
+      line-height: 1.45;
+      color: var(--slate);
+      margin-bottom: 12px;
+    }
+
+    .diagnosis-box strong {
+      color: var(--crimson-dark);
+    }
+
+    .auto-progress-wrap {
+      width: 100%;
+      height: 6px;
+      background: #EADDC4;
+      border-radius: 999px;
+      overflow: hidden;
+      margin-bottom: 14px;
+    }
+
+    .auto-progress-bar {
+      height: 100%;
+      width: 100%;
+      background: var(--crimson);
+      transition: width 0.08s linear;
+    }
+
+    /* Aktions-Buttons */
+    .primary-btn {
+      min-height: 46px;
+      padding: 11px 22px;
+      border-radius: 13px;
+      border: none;
+      background: linear-gradient(180deg, var(--deep-blue) 0%, #142738 100%);
+      color: #FFF;
+      font-size: 0.98rem;
+      font-weight: 700;
+      box-shadow: 0 5px 15px rgba(31, 58, 82, 0.28);
+    }
+
+    .primary-btn:active {
+      transform: scale(0.96);
+    }
+
+    .secondary-btn {
+      min-height: 46px;
+      padding: 11px 18px;
+      border-radius: 13px;
+      border: 2px solid var(--border-subtle);
+      background: var(--bg-parchment);
+      color: var(--deep-blue);
+      font-size: 0.95rem;
+      font-weight: 700;
+    }
+
+    .secondary-btn:active {
+      transform: scale(0.96);
+    }
+
+    .btn-row {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+
+    /* Denkpause: Kompakte Konjugations-Hilfe für alle 6 Personen */
+    .cheat-sheet {
+      background: var(--bg-parchment);
+      border: 1.5px solid var(--border-subtle);
+      border-radius: 14px;
+      padding: 12px 14px;
+      text-align: left;
+      font-size: 0.86rem;
+      line-height: 1.42;
+      margin: 10px 0 12px 0;
+    }
+
+    .esse-grid {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 8px;
+      font-size: 0.83rem;
+      background: #FFFDF7;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .esse-grid th, .esse-grid td {
+      border: 1px solid rgba(31, 58, 82, 0.16);
+      padding: 5px 8px;
+      text-align: left;
+    }
+
+    .esse-grid th {
+      background: var(--deep-blue);
+      color: #FFFDF7;
+      font-weight: 700;
+    }
+
+    /* Abschluss-Bildschirm & Ergebnissicherungs-Tabelle */
+    .stars-display {
+      font-size: 2rem;
+      letter-spacing: 4px;
+      margin: 2px 0 6px 0;
+    }
+
+    .summary-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin: 10px 0 12px 0;
+    }
+
+    .summary-box {
+      background: var(--bg-parchment);
+      border: 1.5px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 8px 6px;
+    }
+
+    .summary-val {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--deep-blue);
+    }
+
+    .summary-lbl {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--slate-muted);
+      text-transform: uppercase;
+    }
+
+    .results-table-wrap {
+      max-height: 230px;
+      overflow-y: auto;
+      border: 1.5px solid var(--border-subtle);
+      border-radius: 12px;
+      background: #FFF;
+      text-align: left;
+    }
+
+    .results-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.83rem;
+    }
+
+    .results-table th {
+      position: sticky;
+      top: 0;
+      background: var(--deep-blue);
+      color: #FFFDF7;
+      padding: 7px 9px;
+      font-weight: 700;
+      z-index: 2;
+    }
+
+    .results-table td {
+      padding: 6px 9px;
+      border-bottom: 1px solid rgba(31, 58, 82, 0.12);
+      vertical-align: top;
+    }
+
+    .results-table tr:nth-child(even) td {
+      background: #FAF5E8;
+    }
+
+    .latin-cell {
+      font-family: var(--font-serif);
+      font-weight: 700;
+      color: var(--deep-blue);
+    }
+
+    .person-tag {
+      display: inline-block;
+      background: var(--deep-blue-light);
+      color: var(--deep-blue);
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 6px;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 740px) {
+      #hud {
+        flex-wrap: wrap;
+        padding: max(6px, env(safe-area-inset-top)) 10px 6px 10px;
+        gap: 6px;
+      }
+      .hud-stats {
+        flex-direction: row;
+        align-items: center;
+        order: 1;
+      }
+      .hud-controls {
+        order: 2;
+      }
+      .task-card {
+        order: 3;
+        flex-basis: 100%;
+        max-width: 100%;
+        padding: 5px 8px;
+      }
+      .btn-label-hide {
+        display: none;
+      }
+      .slot-box {
+        min-width: 96px;
+        font-size: 0.88rem;
+        padding: 3px 8px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <!-- ======================================================================
+         OBERES HUD-BANNER
+         ====================================================================== -->
+    <header id="hud">
+      <!-- Links: 5 Herzen, Aufgabe X/10 & Punktestand -->
+      <div class="hud-stats">
+        <div class="hearts-row" id="hearts-container" aria-label="Verbleibende Leben">
+          <svg class="heart-icon" viewBox="0 0 28 26" fill="none">
+            <path d="M14 23.5C14 23.5 3 16.4 3 8.8C3 5.4 5.6 2.8 8.9 2.8C11.1 2.8 13.0 4.0 14 5.8C15.0 4.0 16.9 2.8 19.1 2.8C22.4 2.8 25 5.4 25 8.8C25 16.4 14 23.5 14 23.5Z" fill="#B8293D" stroke="#631823" stroke-width="1.8"/>
+          </svg>
+          <svg class="heart-icon" viewBox="0 0 28 26" fill="none">
+            <path d="M14 23.5C14 23.5 3 16.4 3 8.8C3 5.4 5.6 2.8 8.9 2.8C11.1 2.8 13.0 4.0 14 5.8C15.0 4.0 16.9 2.8 19.1 2.8C22.4 2.8 25 5.4 25 8.8C25 16.4 14 23.5 14 23.5Z" fill="#B8293D" stroke="#631823" stroke-width="1.8"/>
+          </svg>
+          <svg class="heart-icon" viewBox="0 0 28 26" fill="none">
+            <path d="M14 23.5C14 23.5 3 16.4 3 8.8C3 5.4 5.6 2.8 8.9 2.8C11.1 2.8 13.0 4.0 14 5.8C15.0 4.0 16.9 2.8 19.1 2.8C22.4 2.8 25 5.4 25 8.8C25 16.4 14 23.5 14 23.5Z" fill="#B8293D" stroke="#631823" stroke-width="1.8"/>
+          </svg>
+          <svg class="heart-icon" viewBox="0 0 28 26" fill="none">
+            <path d="M14 23.5C14 23.5 3 16.4 3 8.8C3 5.4 5.6 2.8 8.9 2.8C11.1 2.8 13.0 4.0 14 5.8C15.0 4.0 16.9 2.8 19.1 2.8C22.4 2.8 25 5.4 25 8.8C25 16.4 14 23.5 14 23.5Z" fill="#B8293D" stroke="#631823" stroke-width="1.8"/>
+          </svg>
+          <svg class="heart-icon" viewBox="0 0 28 26" fill="none">
+            <path d="M14 23.5C14 23.5 3 16.4 3 8.8C3 5.4 5.6 2.8 8.9 2.8C11.1 2.8 13.0 4.0 14 5.8C15.0 4.0 16.9 2.8 19.1 2.8C22.4 2.8 25 5.4 25 8.8C25 16.4 14 23.5 14 23.5Z" fill="#B8293D" stroke="#631823" stroke-width="1.8"/>
+          </svg>
+        </div>
+        <div class="score-pills">
+          <div class="stat-pill">Aufgabe: <span id="progress-val">1 / 10</span></div>
+          <div class="stat-pill">Punkte: <span id="score-val">0</span></div>
+        </div>
+      </div>
+
+      <!-- Mitte: Aktuelle Aufgabe & Sammel-Slots -->
+      <div class="task-card">
+        <div class="grammar-meta-badge" id="task-meta-badge">2. Pers. Pl. · Plusquamperfekt Passiv</div>
+        <div class="task-prompt-line">
+          <span class="subject-badge" id="task-subject">vōs [puellae, f. Pl.]</span>
+          <span class="predicate-german" id="task-german">„… wart aufgenommen worden.“</span>
+        </div>
+        <div class="slots-row">
+          <div class="slot-box" id="slot-ppp">[ PPP ]</div>
+          <span class="slot-plus">+</span>
+          <div class="slot-box" id="slot-esse">[ esse ]</div>
+        </div>
+      </div>
+
+      <!-- Rechts: Pause, Ton & Menü -->
+      <div class="hud-controls">
+        <button type="button" class="hud-btn" id="btn-pause" onclick="window.pauseGame()" title="Denkpause">
+          ⏸ <span class="btn-label-hide">Pause</span>
+        </button>
+        <button type="button" class="hud-btn" id="btn-sound" onclick="window.toggleSound()" title="Ton umschalten">
+          🔊
+        </button>
+        <button type="button" class="hud-btn" id="btn-menu" onclick="window.returnToMenu()" title="Zurück zum Menü">
+          🏠 <span class="btn-label-hide">Menü</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- ======================================================================
+         SPIELFELD (CANVAS)
+         ====================================================================== -->
+    <main id="canvas-wrapper">
+      <canvas id="game-canvas"></canvas>
+
+      <div id="success-toast" role="status" aria-live="polite">
+        <div class="toast-badge">OPTIME! +100 Bonuspunkte</div>
+        <div class="toast-latin" id="toast-latin-text">Vōs (puellae) receptae erātis.</div>
+        <div class="toast-german" id="toast-german-text">Ihr (Mädchen) wart aufgenommen worden.</div>
+      </div>
+    </main>
+
+    <!-- ======================================================================
+         OVERLAY 1: STARTBILDSCHIRM
+         ====================================================================== -->
+    <section class="overlay" id="screen-start">
+      <div class="modal-card">
+        <div class="emblem-wrap">
+          <svg width="76" height="76" viewBox="0 0 100 100" fill="none">
+            <circle cx="50" cy="50" r="45" fill="#FCF6E0" stroke="#1F3A52" stroke-width="4"/>
+            <circle cx="50" cy="50" r="39" fill="none" stroke="#D4AF37" stroke-width="2" stroke-dasharray="4 3"/>
+            <path d="M30 70C20 58 20 38 34 24" stroke="#1E7E4E" stroke-width="3" stroke-linecap="round"/>
+            <path d="M70 70C80 58 80 38 66 24" stroke="#1E7E4E" stroke-width="3" stroke-linecap="round"/>
+            <circle cx="25" cy="52" r="3.5" fill="#1E7E4E"/>
+            <circle cx="26" cy="38" r="3.5" fill="#1E7E4E"/>
+            <circle cx="75" cy="52" r="3.5" fill="#1E7E4E"/>
+            <circle cx="74" cy="38" r="3.5" fill="#1E7E4E"/>
+            <path d="M38 40H62L58 60H42L38 40Z" fill="#C85A32" stroke="#1F3A52" stroke-width="2"/>
+            <path d="M36 40H64" stroke="#D4AF37" stroke-width="3" stroke-linecap="round"/>
+            <rect x="14" y="65" width="72" height="16" rx="6" fill="#1F3A52" stroke="#D4AF37" stroke-width="1.5"/>
+            <text x="50" y="76" text-anchor="middle" fill="#FFFDF7" font-family="Georgia, serif" font-size="8.5" font-weight="bold">BENE EVENIAT!</text>
+          </svg>
+        </div>
+
+        <h1 class="game-title">Verba Captāre</h1>
+        <div class="game-subtitle">Der Formen-Fänger · Lektion 16: Perfekt &amp; Plusquamperfekt Passiv (1.–3. Pers. Sg. &amp; Pl.)</div>
+
+        <p class="intro-text">
+          Fange das passende <strong>PPP</strong> (KNG-Kongruenz!) und die richtige Form von <strong>esse</strong> (1.–3. Person Sg./Pl.) mit dem Korb auf; weiche falschen Formen aus! Jede Runde umfasst <strong>10 Aufgaben</strong> aus allen Personen.
+        </p>
+
+        <!-- Gelbe Hinweisbox für iPad-Vorschau (QuickLook) ohne JavaScript -->
+        <div id="quicklook-warning" class="quicklook-box">
+          iPad-Hinweis: Dein iPad zeigt diese Datei gerade nur in der Vorschau (ohne JavaScript). Öffne die Seite über Safari oder euren Kurs-Link, damit das Spiel startet!
+        </div>
+
+        <div class="level-grid">
+          <button type="button" class="level-btn" id="btn-level-1" onclick="window.startGame(1)">
+            <div class="level-info">
+              <h3>Stufe 1: Einstieg (Basis-Check)</h3>
+              <p>Langsames Tempo, volle KNG- und Personen-Hilfe im Aufgaben-Banner</p>
+            </div>
+            <span class="level-arrow">▶</span>
+          </button>
+
+          <button type="button" class="level-btn" id="btn-level-2" onclick="window.startGame(2)">
+            <div class="level-info">
+              <h3>Stufe 2: Lektion 16 (Training)</h3>
+              <p>Mittleres Tempo, alle 6 Personen &amp; unregelmäßige PPPs mit KNG-Hilfe</p>
+            </div>
+            <span class="level-arrow">▶</span>
+          </button>
+
+          <button type="button" class="level-btn" id="btn-level-3" onclick="window.startGame(3)">
+            <div class="level-info">
+              <h3>Stufe 3: Profi-Modus (Meisterprüfung)</h3>
+              <p>Flottes Tempo, <strong>ohne</strong> KNG-Klammerhilfe und <strong>ohne</strong> Personen-Badge</p>
+            </div>
+            <span class="level-arrow">▶</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         OVERLAY 2: DIAGNOSTISCHES FEHLER-FEEDBACK
+         ====================================================================== -->
+    <section class="overlay hidden" id="screen-error">
+      <div class="modal-card">
+        <div class="error-header">⚠️ Falsche Form gefangen! (-1 Herz)</div>
+        <div class="caught-wrong-word" id="err-word">sumus</div>
+        <div class="error-context" id="err-context">
+          Gesucht für: <strong>vōs [puellae, f. Pl.]</strong> · „… seid gelobt worden.“
+        </div>
+        <div class="diagnosis-box" id="err-explanation">
+          Falsche Person: <strong>'sumus'</strong> heißt <em>'wir sind … worden'</em> (1. Pl.) – gesucht war aber <em>'ihr'</em> (2. Pl. → <strong>'estis'</strong>)!
+        </div>
+        <div class="auto-progress-wrap">
+          <div class="auto-progress-bar" id="error-timer-bar"></div>
+        </div>
+        <button type="button" class="primary-btn" id="btn-error-continue" onclick="window.continueAfterError(false)">
+          Weiter ▶
+        </button>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         OVERLAY 3: DENKPAUSE (MIT KONJUGATIONSÜBERSICHT)
+         ====================================================================== -->
+    <section class="overlay hidden" id="screen-pause">
+      <div class="modal-card">
+        <h2 class="game-title" style="font-size: 1.5rem;">⏸ Denkpause</h2>
+        <p class="game-subtitle">Grammatik-Kurzübersicht (Lektion 16, G51–G52)</p>
+
+        <div class="cheat-sheet">
+          <div><strong>1. PPP (KNG-Kongruenz):</strong> Passt sich in Kasus, Numerus und Genus an das Subjekt an (z. B. <em>Cloelia</em> f. Sg. → <em>reddita</em>; <em>foedus</em> n. Sg. → <em>ruptum</em>; <em>obsidēs</em> m. Pl. → <em>dēlēctī</em>).</div>
+          <table class="esse-grid">
+            <thead>
+              <tr>
+                <th>Person</th>
+                <th>Perfekt Passiv (PPP + …)</th>
+                <th>Plusquamperfekt Passiv (PPP + …)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>1. Sg. (<em>ego</em>)</td>
+                <td><strong>sum</strong> (<em>bin … worden</em>)</td>
+                <td><strong>eram</strong> (<em>war … worden</em>)</td>
+              </tr>
+              <tr>
+                <td>2. Sg. (<em>tū</em>)</td>
+                <td><strong>es</strong> (<em>bist … worden</em>)</td>
+                <td><strong>erās</strong> (<em>warst … worden</em>)</td>
+              </tr>
+              <tr>
+                <td>3. Sg. (<em>er/sie/es</em>)</td>
+                <td><strong>est</strong> (<em>ist … worden</em>)</td>
+                <td><strong>erat</strong> (<em>war … worden</em>)</td>
+              </tr>
+              <tr>
+                <td>1. Pl. (<em>nōs</em>)</td>
+                <td><strong>sumus</strong> (<em>sind … worden</em>)</td>
+                <td><strong>erāmus</strong> (<em>waren … worden</em>)</td>
+              </tr>
+              <tr>
+                <td>2. Pl. (<em>vōs</em>)</td>
+                <td><strong>estis</strong> (<em>seid … worden</em>)</td>
+                <td><strong>erātis</strong> (<em>wart … worden</em>)</td>
+              </tr>
+              <tr>
+                <td>3. Pl. (<em>sie</em>)</td>
+                <td><strong>sunt</strong> (<em>sind … worden</em>)</td>
+                <td><strong>erant</strong> (<em>waren … worden</em>)</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="btn-row">
+          <button type="button" class="primary-btn" id="btn-resume" onclick="window.resumeGame()">
+            Weiterspielen ▶
+          </button>
+          <button type="button" class="secondary-btn" id="btn-pause-menu" onclick="window.returnToMenu()">
+            Zurück zum Menü
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         OVERLAY 4: ABSCHLUSS-BILDSCHIRM & ERGEBNISSICHERUNG
+         ====================================================================== -->
+    <section class="overlay hidden" id="screen-summary">
+      <div class="modal-card">
+        <div class="stars-display" id="sum-stars">⭐⭐⭐</div>
+        <h2 class="game-title" id="sum-title">Optime fēcistī!</h2>
+        <p class="game-subtitle" id="sum-subtitle">Alle 10 Aufgaben aus 1.–3. Person Sg. &amp; Pl. gelöst!</p>
+
+        <div class="summary-stats">
+          <div class="summary-box">
+            <div class="summary-val" id="sum-score">0</div>
+            <div class="summary-lbl">Gesamtpunkte</div>
+          </div>
+          <div class="summary-box">
+            <div class="summary-val" id="sum-solved">10 / 10</div>
+            <div class="summary-lbl">Gelöste Formen</div>
+          </div>
+          <div class="summary-box">
+            <div class="summary-val" id="sum-hearts">5 / 5</div>
+            <div class="summary-lbl">Rest-Herzen</div>
+          </div>
+        </div>
+
+        <div class="results-table-wrap">
+          <table class="results-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Form</th>
+                <th>Lateinisch</th>
+                <th>Deutsch</th>
+              </tr>
+            </thead>
+            <tbody id="sum-table-body">
+              <!-- Wird dynamisch mit allen gelösten Aufgaben der Runde befüllt -->
+            </tbody>
+          </table>
+        </div>
+
+        <div class="btn-row">
+          <button type="button" class="primary-btn" id="btn-restart" onclick="window.restartGame()">
+            Neue Runde starten ↻
+          </button>
+          <button type="button" class="secondary-btn" id="btn-go-menu" onclick="window.returnToMenu()">
+            Stufe wählen
+          </button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    var qlWarn = document.getElementById('quicklook-warning'); if (qlWarn) qlWarn.style.display = 'none';
+
+    /**
+     * ==========================================================================
+     * VERBA CAPTĀRE – DER FORMEN-FÄNGER (Pontes Lektion 16: Cloelia & Porsenna)
+     * 30 Aufgaben über alle 6 Person-Numerus-Kombinationen (1.–3. Pers. Sg./Pl.)
+     * ==========================================================================
+     */
+
+    // --------------------------------------------------------------------------
+    // 1. AUFGABENPOOL (30 Aufgaben: je 5 pro Person/Numerus aus Lektion 16)
+    // --------------------------------------------------------------------------
+    var TASK_POOL = [
+      // ==================== 1. PERSON SINGULAR (sum / eram) ====================
+      {
+        id: 1,
+        personGroup: "1sg",
+        shortTag: "1. Sg. Perf.",
+        badgeHint: "1. Pers. Sg. · Perfekt Passiv",
+        subjectWithHint: "ego [Cloelia, f. Sg.]",
+        subjectNoHint: "ego [Cloelia]",
+        germanPred: "… bin zurückgegeben worden.",
+        targetPPP: "reddita",
+        targetEsse: "sum",
+        fullLatin: "Ego (Cloelia) reddita sum.",
+        fullGerman: "Ich (Cloelia) bin zurückgegeben worden.",
+        distractors: [
+          { word: "redditus", reason: "Falsches Genus: <strong>'redditus'</strong> ist maskulin – <strong>'ego [Cloelia]'</strong> ist aber feminin (<strong>'reddita'</strong>)!" },
+          { word: "redditae", reason: "Falscher Numerus: <strong>'redditae'</strong> ist Plural – <strong>'ego'</strong> (ich) ist Singular!" },
+          { word: "eram", reason: "Falsches Tempus: <strong>'eram'</strong> wäre Plusquamperfekt (<em>'ich war … worden'</em>) – gesucht ist Perfekt (<strong>'sum'</strong>)!" },
+          { word: "est", reason: "Falsche Person: <strong>'est'</strong> ist 3. Person Singular (<em>'er/sie/es ist'</em>) – gesucht ist 1. Person Singular (<strong>'sum'</strong>)!" },
+          { word: "sumus", reason: "Falscher Numerus: <strong>'sumus'</strong> ist 1. Person Plural (<em>'wir sind'</em>) – gesucht ist <strong>'ego'</strong> (1. Sg. → <strong>'sum'</strong>)!" }
+        ]
+      },
+      {
+        id: 2,
+        personGroup: "1sg",
+        shortTag: "1. Sg. Plqpf.",
+        badgeHint: "1. Pers. Sg. · Plusquamperfekt Passiv",
+        subjectWithHint: "ego [nūntius, m. Sg.]",
+        subjectNoHint: "ego [nūntius]",
+        germanPred: "… war geschickt worden.",
+        targetPPP: "missus",
+        targetEsse: "eram",
+        fullLatin: "Ego (nūntius) missus eram.",
+        fullGerman: "Ich (der Bote) war geschickt worden.",
+        distractors: [
+          { word: "missa", reason: "Falsches Genus: <strong>'missa'</strong> ist feminin – <strong>'nūntius'</strong> (der Bote) ist maskulin (<strong>'missus'</strong>)!" },
+          { word: "missī", reason: "Falscher Numerus: <strong>'missī'</strong> ist Plural – <strong>'ego'</strong> ist Singular!" },
+          { word: "sum", reason: "Falsches Tempus: <strong>'sum'</strong> wäre Perfekt (<em>'ich bin … worden'</em>) – gesucht ist Plusquamperfekt (<strong>'eram'</strong>)!" },
+          { word: "erat", reason: "Falsche Person: <strong>'erat'</strong> ist 3. Person Singular (<em>'er/sie/es war'</em>) – gesucht ist 1. Person Singular (<strong>'eram'</strong>)!" },
+          { word: "erāmus", reason: "Falscher Numerus: <strong>'erāmus'</strong> ist 1. Person Plural (<em>'wir waren'</em>) – gesucht ist <strong>'ego'</strong> (<strong>'eram'</strong>)!" }
+        ]
+      },
+      {
+        id: 3,
+        personGroup: "1sg",
+        shortTag: "1. Sg. Perf.",
+        badgeHint: "1. Pers. Sg. · Perfekt Passiv",
+        subjectWithHint: "ego [custōs, m. Sg.]",
+        subjectNoHint: "ego [custōs]",
+        germanPred: "… bin bestraft worden.",
+        targetPPP: "pūnītus",
+        targetEsse: "sum",
+        fullLatin: "Ego (custōs) pūnītus sum.",
+        fullGerman: "Ich (der Wächter) bin bestraft worden.",
+        distractors: [
+          { word: "pūnīta", reason: "Falsches Genus: <strong>'pūnīta'</strong> ist feminin – <strong>'custōs'</strong> (Wächter) ist maskulin (<strong>'pūnītus'</strong>)!" },
+          { word: "pūnītī", reason: "Falscher Numerus: <strong>'pūnītī'</strong> ist Plural – <strong>'ego'</strong> ist Singular!" },
+          { word: "eram", reason: "Falsches Tempus: <strong>'eram'</strong> wäre Plusquamperfekt (<em>'ich war … worden'</em>) – gesucht ist Perfekt (<strong>'sum'</strong>)!" },
+          { word: "es", reason: "Falsche Person: <strong>'es'</strong> ist 2. Person Singular (<em>'du bist'</em>) – gesucht ist 1. Person Singular (<strong>'sum'</strong>)!" }
+        ]
+      },
+      {
+        id: 4,
+        personGroup: "1sg",
+        shortTag: "1. Sg. Plqpf.",
+        badgeHint: "1. Pers. Sg. · Plusquamperfekt Passiv",
+        subjectWithHint: "ego [Cloelia, f. Sg.]",
+        subjectNoHint: "ego [Cloelia]",
+        germanPred: "… war gerufen worden.",
+        targetPPP: "vocāta",
+        targetEsse: "eram",
+        fullLatin: "Ego (Cloelia) vocāta eram.",
+        fullGerman: "Ich (Cloelia) war gerufen worden.",
+        distractors: [
+          { word: "vocātus", reason: "Falsches Genus: <strong>'vocātus'</strong> ist maskulin – <strong>'Cloelia'</strong> ist feminin (<strong>'vocāta'</strong>)!" },
+          { word: "vocātae", reason: "Falscher Numerus: <strong>'vocātae'</strong> ist Plural – <strong>'ego'</strong> ist Singular!" },
+          { word: "sum", reason: "Falsches Tempus: <strong>'sum'</strong> wäre Perfekt (<em>'ich bin … worden'</em>) – gesucht ist Plusquamperfekt (<strong>'eram'</strong>)!" },
+          { word: "erās", reason: "Falsche Person: <strong>'erās'</strong> ist 2. Person Singular (<em>'du warst'</em>) – gesucht ist 1. Person Singular (<strong>'eram'</strong>)!" }
+        ]
+      },
+      {
+        id: 5,
+        personGroup: "1sg",
+        shortTag: "1. Sg. Perf.",
+        badgeHint: "1. Pers. Sg. · Perfekt Passiv",
+        subjectWithHint: "ego [obses, m. Sg.]",
+        subjectNoHint: "ego [obses]",
+        germanPred: "… bin ausgewählt worden.",
+        targetPPP: "dēlēctus",
+        targetEsse: "sum",
+        fullLatin: "Ego (obses) dēlēctus sum.",
+        fullGerman: "Ich (die Geisel) bin ausgewählt worden.",
+        distractors: [
+          { word: "dēlēcta", reason: "Falsches Genus: <strong>'dēlēcta'</strong> ist feminin – hier ist <strong>'obses'</strong> maskulin Singular (<strong>'dēlēctus'</strong>)!" },
+          { word: "dēlēctī", reason: "Falscher Numerus: <strong>'dēlēctī'</strong> ist Plural – <strong>'ego'</strong> ist Singular!" },
+          { word: "eram", reason: "Falsches Tempus: <strong>'eram'</strong> wäre Plusquamperfekt (<em>'ich war … worden'</em>) – gesucht ist Perfekt (<strong>'sum'</strong>)!" },
+          { word: "est", reason: "Falsche Person: <strong>'est'</strong> ist 3. Person Singular (<em>'er/sie/es ist'</em>) – gesucht ist 1. Person Singular (<strong>'sum'</strong>)!" }
+        ]
+      },
+
+      // ==================== 2. PERSON SINGULAR (es / erās) ====================
+      {
+        id: 6,
+        personGroup: "2sg",
+        shortTag: "2. Sg. Plqpf.",
+        badgeHint: "2. Pers. Sg. · Plusquamperfekt Passiv",
+        subjectWithHint: "tū [custōs, m. Sg.]",
+        subjectNoHint: "tū [custōs]",
+        germanPred: "… warst getadelt worden.",
+        targetPPP: "reprehēnsus",
+        targetEsse: "erās",
+        fullLatin: "Tū (custōs) reprehēnsus erās.",
+        fullGerman: "Du (der Wächter) warst getadelt worden.",
+        distractors: [
+          { word: "reprehēnsa", reason: "Falsches Genus: <strong>'reprehēnsa'</strong> ist feminin – <strong>'custōs'</strong> (Wächter) ist maskulin (<strong>'reprehēnsus'</strong>)!" },
+          { word: "reprehēnsī", reason: "Falscher Numerus: <strong>'reprehēnsī'</strong> ist Plural – <strong>'tū'</strong> (du) ist Singular!" },
+          { word: "es", reason: "Falsches Tempus: <strong>'es'</strong> wäre Perfekt (<em>'du bist … worden'</em>) – gesucht ist Plusquamperfekt (<strong>'erās'</strong>)!" },
+          { word: "erat", reason: "Falsche Person: <strong>'erat'</strong> ist 3. Person Singular (<em>'er/sie/es war'</em>) – gesucht ist 2. Person Singular (<strong>'erās'</strong>)!" },
+          { word: "erātis", reason: "Falscher Numerus: <strong>'erātis'</strong> ist 2. Person Plural (<em>'ihr wart'</em>) – gesucht ist <strong>'tū'</strong> (2. Sg. → <strong>'erās'</strong>)!" }
+        ]
+      },
+      {
+        id: 7,
+        personGroup: "2sg",
+        shortTag: "2. Sg. Perf.",
+        badgeHint: "2. Pers. Sg. · Perfekt Passiv",
+        subjectWithHint: "tū [Cloelia, f. Sg.]",
+        subjectNoHint: "tū [Cloelia]",
+        germanPred: "… bist gelobt worden.",
+        targetPPP: "laudāta",
+        targetEsse: "es",
+        fullLatin: "Tū (Cloelia) laudāta es.",
+        fullGerman: "Du (Cloelia) bist gelobt worden.",
+        distractors: [
+          { word: "laudātus", reason: "Falsches Genus: <strong>'laudātus'</strong> ist maskulin – <strong>'Cloelia'</strong> ist feminin (<strong>'laudāta'</strong>)!" },
+          { word: "laudātae", reason: "Falscher Numerus: <strong>'laudātae'</strong> ist Plural – <strong>'tū'</strong> ist Singular!" },
+          { word: "erās", reason: "Falsches Tempus: <strong>'erās'</strong> wäre Plusquamperfekt (<em>'du warst … worden'</em>) – gesucht ist Perfekt (<strong>'es'</strong>)!" },
+          { word: "est", reason: "Falsche Person: <strong>'est'</strong> ist 3. Person Singular (<em>'sie ist'</em>) – gesucht ist 2. Person Singular (<strong>'es'</strong>)!" },
+          { word: "estis", reason: "Falscher Numerus: <strong>'estis'</strong> ist 2. Person Plural (<em>'ihr seid'</em>) – gesucht ist <strong>'tū'</strong> (<strong>'es'</strong>)!" }
+        ]
+      },
+      {
+        id: 8,
+        personGroup: "2sg",
+        shortTag: "2. Sg. Perf.",
+        badgeHint: "2. Pers. Sg. · Perfekt Passiv",
+        subjectWithHint: "tū [puella, f. Sg.]",
+        subjectNoHint: "tū [puella]",
+        germanPred: "… bist aufgenommen worden.",
+        targetPPP: "recepta",
+        targetEsse: "es",
+        fullLatin: "Tū (puella) recepta es.",
+        fullGerman: "Du (Mädchen) bist aufgenommen worden.",
+        distractors: [
+          { word: "receptus", reason: "Falsches Genus: <strong>'receptus'</strong> ist maskulin – <strong>'puella'</strong> ist feminin (<strong>'recepta'</strong>)!" },
+          { word: "receptae", reason: "Falscher Numerus: <strong>'receptae'</strong> ist Plural – <strong>'tū'</strong> ist Singular!" },
+          { word: "erās", reason: "Falsches Tempus: <strong>'erās'</strong> wäre Plusquamperfekt (<em>'du warst … worden'</em>) – gesucht ist Perfekt (<strong>'es'</strong>)!" },
+          { word: "sum", reason: "Falsche Person: <strong>'sum'</strong> ist 1. Person Singular (<em>'ich bin'</em>) – gesucht ist 2. Person Singular (<strong>'es'</strong>)!" }
+        ]
+      },
+      {
+        id: 9,
+        personGroup: "2sg",
+        shortTag: "2. Sg. Plqpf.",
+        badgeHint: "2. Pers. Sg. · Plusquamperfekt Passiv",
+        subjectWithHint: "tū [rēx, m. Sg.]",
+        subjectNoHint: "tū [rēx]",
+        germanPred: "… warst beunruhigt worden.",
+        targetPPP: "sollicitātus",
+        targetEsse: "erās",
+        fullLatin: "Tū (rēx) sollicitātus erās.",
+        fullGerman: "Du (König) warst beunruhigt worden.",
+        distractors: [
+          { word: "sollicitāta", reason: "Falsches Genus: <strong>'sollicitāta'</strong> ist feminin – <strong>'rēx'</strong> (König) ist maskulin (<strong>'sollicitātus'</strong>)!" },
+          { word: "sollicitātī", reason: "Falscher Numerus: <strong>'sollicitātī'</strong> ist Plural – <strong>'tū'</strong> ist Singular!" },
+          { word: "es", reason: "Falsches Tempus: <strong>'es'</strong> wäre Perfekt (<em>'du bist … worden'</em>) – gesucht ist Plusquamperfekt (<strong>'erās'</strong>)!" },
+          { word: "eram", reason: "Falsche Person: <strong>'eram'</strong> ist 1. Person Singular (<em>'ich war'</em>) – gesucht ist 2. Person Singular (<strong>'erās'</strong>)!" }
+        ]
+      },
+      {
+        id: 10,
+        personGroup: "2sg",
+        shortTag: "2. Sg. Perf.",
+        badgeHint: "2. Pers. Sg. · Perfekt Passiv",
+        subjectWithHint: "tū [puella, f. Sg.]",
+        subjectNoHint: "tū [puella]",
+        germanPred: "… bist zurückgeführt worden.",
+        targetPPP: "reducta",
+        targetEsse: "es",
+        fullLatin: "Tū (puella) reducta es.",
+        fullGerman: "Du (Mädchen) bist zurückgeführt worden.",
+        distractors: [
+          { word: "reductus", reason: "Falsches Genus: <strong>'reductus'</strong> ist maskulin – <strong>'puella'</strong> ist feminin (<strong>'reducta'</strong>)!" },
+          { word: "reductae", reason: "Falscher Numerus: <strong>'reductae'</strong> ist Plural – <strong>'tū'</strong> ist Singular!" },
+          { word: "erās", reason: "Falsches Tempus: <strong>'erās'</strong> wäre Plusquamperfekt (<em>'du warst … worden'</em>) – gesucht ist Perfekt (<strong>'es'</strong>)!" },
+          { word: "est", reason: "Falsche Person: <strong>'est'</strong> ist 3. Person Singular (<em>'sie ist'</em>) – gesucht ist 2. Person Singular (<strong>'es'</strong>)!" }
+        ]
+      },
+
+      // ==================== 3. PERSON SINGULAR (est / erat) ====================
+      {
+        id: 11,
+        personGroup: "3sg",
+        shortTag: "3. Sg. Perf.",
+        badgeHint: "3. Pers. Sg. · Perfekt Passiv",
+        subjectWithHint: "rēx (m. Sg.)",
+        subjectNoHint: "rēx",
+        germanPred: "… ist gerufen worden.",
+        targetPPP: "vocātus",
+        targetEsse: "est",
+        fullLatin: "Rēx vocātus est.",
+        fullGerman: "Der König ist gerufen worden.",
+        distractors: [
+          { word: "vocāta", reason: "Falsches Genus: <strong>'vocāta'</strong> ist feminin – <strong>'rēx'</strong> (König) ist maskulin (<strong>'vocātus'</strong>)!" },
+          { word: "vocātī", reason: "Falscher Numerus: <strong>'vocātī'</strong> ist Plural – <strong>'rēx'</strong> ist Singular!" },
+          { word: "erat", reason: "Falsches Tempus: <strong>'erat'</strong> wäre Plusquamperfekt (<em>'war … worden'</em>) – gesucht ist Perfekt (<strong>'est'</strong>)!" },
+          { word: "sunt", reason: "Falscher Numerus: <strong>'sunt'</strong> ist Plural – <strong>'rēx'</strong> ist Singular (<strong>'est'</strong>)!" },
+          { word: "es", reason: "Falsche Person: <strong>'es'</strong> ist 2. Person Singular (<em>'du bist'</em>) – gesucht ist 3. Person Singular (<strong>'est'</strong>)!" }
+        ]
+      },
+      {
+        id: 12,
+        personGroup: "3sg",
+        shortTag: "3. Sg. Plqpf.",
+        badgeHint: "3. Pers. Sg. · Plusquamperfekt Passiv",
+        subjectWithHint: "foedus (n. Sg.)",
+        subjectNoHint: "foedus",
+        germanPred: "… war gebrochen worden.",
+        targetPPP: "ruptum",
+        targetEsse: "erat",
+        fullLatin: "Foedus ruptum erat.",
+        fullGerman: "Das Bündnis war gebrochen worden.",
+        distractors: [
+          { word: "ruptus", reason: "Falsches Genus: <strong>'foedus, -eris'</strong> ist trotz <em>-us</em> Neutrum Singular (<strong>'ruptum'</strong>)!" },
+          { word: "rupta", reason: "Falsches Genus/Numerus: <strong>'rupta'</strong> ist feminin Singular (oder Neutrum Plural) – <strong>'foedus'</strong> ist Neutrum Singular (<strong>'ruptum'</strong>)!" },
+          { word: "est", reason: "Falsches Tempus: <strong>'est'</strong> wäre Perfekt (<em>'ist … worden'</em>) – gesucht ist Plusquamperfekt (<strong>'erat'</strong>)!" },
+          { word: "erant", reason: "Falscher Numerus: <strong>'erant'</strong> ist Plural – <strong>'foedus'</strong> ist Singular (<strong>'erat'</strong>)!" }
+        ]
+      },
+      {
+        id: 13,
+        personGroup: "3sg",
+        shortTag: "3. Sg. Perf.",
+        badgeHint: "3. Pers. Sg. · Perfekt Passiv",
+        subjectWithHint: "statua (f. Sg.)",
+        subjectNoHint: "statua",
+        germanPred: "… ist aufgestellt worden.",
+        targetPPP: "posita",
+        targetEsse: "est",
+        fullLatin: "Statua posita est.",
+        fullGerman: "Eine Statue ist aufgestellt worden.",
+        distractors: [
+          { word: "positus", reason: "Falsches Genus: <strong>'positus'</strong> ist maskulin – <strong>'statua'</strong> ist feminin Singular (<strong>'posita'</strong>)!" },
+          { word: "positum", reason: "Falsches Genus: <strong>'positum'</strong> ist Neutrum – <strong>'statua'</strong> ist feminin Singular (<strong>'posita'</strong>)!" },
+          { word: "erat", reason: "Falsches Tempus: <strong>'erat'</strong> wäre Plusquamperfekt (<em>'war … worden'</em>) – gesucht ist Perfekt (<strong>'est'</strong>)!" },
+          { word: "sunt", reason: "Falscher Numerus: <strong>'sunt'</strong> ist Plural – <strong>'statua'</strong> ist Singular!" }
+        ]
+      },
+      {
+        id: 14,
+        personGroup: "3sg",
+        shortTag: "3. Sg. Plqpf.",
+        badgeHint: "3. Pers. Sg. · Plusquamperfekt Passiv",
+        subjectWithHint: "īra (f. Sg.)",
+        subjectNoHint: "īra",
+        germanPred: "… war verwandelt worden.",
+        targetPPP: "mūtāta",
+        targetEsse: "erat",
+        fullLatin: "Īra mūtāta erat.",
+        fullGerman: "Der Zorn war verwandelt worden.",
+        distractors: [
+          { word: "mūtātus", reason: "Falsches Genus: <strong>'īra'</strong> (der Zorn) ist im Lateinischen feminin (<strong>'mūtāta'</strong>)!" },
+          { word: "mūtātae", reason: "Falscher Numerus: <strong>'mūtātae'</strong> ist Plural – <strong>'īra'</strong> ist Singular!" },
+          { word: "est", reason: "Falsches Tempus: <strong>'est'</strong> wäre Perfekt (<em>'ist … worden'</em>) – gesucht ist Plusquamperfekt (<strong>'erat'</strong>)!" },
+          { word: "erant", reason: "Falscher Numerus: <strong>'erant'</strong> ist Plural – <strong>'īra'</strong> ist Singular!" }
+        ]
+      },
+      {
+        id: 15,
+        personGroup: "3sg",
+        shortTag: "3. Sg. Perf.",
+        badgeHint: "3. Pers. Sg. · Perfekt Passiv",
+        subjectWithHint: "Cloelia (f. Sg.)",
+        subjectNoHint: "Cloelia",
+        germanPred: "… ist zurückgegeben worden.",
+        targetPPP: "reddita",
+        targetEsse: "est",
+        fullLatin: "Cloelia reddita est.",
+        fullGerman: "Cloelia ist zurückgegeben worden.",
+        distractors: [
+          { word: "redditus", reason: "Falsches Genus: <strong>'redditus'</strong> ist maskulin – <strong>'Cloelia'</strong> ist feminin Singular (<strong>'reddita'</strong>)!" },
+          { word: "redditae", reason: "Falscher Numerus: <strong>'redditae'</strong> ist Plural – <strong>'Cloelia'</strong> ist Singular!" },
+          { word: "erat", reason: "Falsches Tempus: <strong>'erat'</strong> wäre Plusquamperfekt (<em>'war … worden'</em>) – gesucht ist Perfekt (<strong>'est'</strong>)!" },
+          { word: "sum", reason: "Falsche Person: <strong>'sum'</strong> ist 1. Person Singular (<em>'ich bin'</em>) – <strong>'Cloelia'</strong> ist 3. Person Singular (<strong>'est'</strong>)!" }
+        ]
+      },
+
+      // ==================== 1. PERSON PLURAL (sumus / erāmus) ====================
+      {
+        id: 16,
+        personGroup: "1pl",
+        shortTag: "1. Pl. Perf.",
+        badgeHint: "1. Pers. Pl. · Perfekt Passiv",
+        subjectWithHint: "nōs [Rōmānī, m. Pl.]",
+        subjectNoHint: "nōs [Rōmānī]",
+        germanPred: "… sind beunruhigt worden.",
+        targetPPP: "sollicitātī",
+        targetEsse: "sumus",
+        fullLatin: "Nōs (Rōmānī) sollicitātī sumus.",
+        fullGerman: "Wir (Römer) sind beunruhigt worden.",
+        distractors: [
+          { word: "sollicitātae", reason: "Falsches Genus: <strong>'sollicitātae'</strong> ist feminin – <strong>'Rōmānī'</strong> (die Römer) ist maskulin Plural (<strong>'sollicitātī'</strong>)!" },
+          { word: "sollicitātus", reason: "Falscher Numerus: <strong>'sollicitātus'</strong> ist Singular – <strong>'nōs'</strong> (wir) ist Plural!" },
+          { word: "erāmus", reason: "Falsches Tempus: <strong>'erāmus'</strong> wäre Plusquamperfekt (<em>'wir waren … worden'</em>) – gesucht ist Perfekt (<strong>'sumus'</strong>)!" },
+          { word: "sunt", reason: "Falsche Person: <strong>'sunt'</strong> ist 3. Person Plural (<em>'sie sind'</em>) – gesucht ist 1. Person Plural (<strong>'sumus'</strong>)!" },
+          { word: "estis", reason: "Falsche Person: <strong>'estis'</strong> ist 2. Person Plural (<em>'ihr seid'</em>) – gesucht ist 1. Person Plural (<strong>'sumus'</strong>)!" }
+        ]
+      },
+      {
+        id: 17,
+        personGroup: "1pl",
+        shortTag: "1. Pl. Plqpf.",
+        badgeHint: "1. Pers. Pl. · Plusquamperfekt Passiv",
+        subjectWithHint: "nōs [puellae, f. Pl.]",
+        subjectNoHint: "nōs [puellae]",
+        germanPred: "… waren geführt worden.",
+        targetPPP: "ductae",
+        targetEsse: "erāmus",
+        fullLatin: "Nōs (puellae) ductae erāmus.",
+        fullGerman: "Wir (Mädchen) waren geführt worden.",
+        distractors: [
+          { word: "ductī", reason: "Falsches Genus: <strong>'ductī'</strong> ist maskulin – <strong>'puellae'</strong> ist feminin Plural (<strong>'ductae'</strong>)!" },
+          { word: "ducta", reason: "Falscher Numerus: <strong>'ducta'</strong> ist Singular – <strong>'nōs'</strong> (wir) ist Plural!" },
+          { word: "sumus", reason: "Falsches Tempus: <strong>'sumus'</strong> wäre Perfekt (<em>'wir sind … worden'</em>) – gesucht ist Plusquamperfekt (<strong>'erāmus'</strong>)!" },
+          { word: "erant", reason: "Falsche Person: <strong>'erant'</strong> ist 3. Person Plural (<em>'sie waren'</em>) – gesucht ist 1. Person Plural (<strong>'erāmus'</strong>)!" },
+          { word: "erātis", reason: "Falsche Person: <strong>'erātis'</strong> ist 2. Person Plural (<em>'ihr wart'</em>) – gesucht ist 1. Person Plural (<strong>'erāmus'</strong>)!" }
+        ]
+      },
+      {
+        id: 18,
+        personGroup: "1pl",
+        shortTag: "1. Pl. Perf.",
+        badgeHint: "1. Pers. Pl. · Perfekt Passiv",
+        subjectWithHint: "nōs [obsidēs, m. Pl.]",
+        subjectNoHint: "nōs [obsidēs]",
+        germanPred: "… sind zurückgeführt worden.",
+        targetPPP: "reductī",
+        targetEsse: "sumus",
+        fullLatin: "Nōs (obsidēs) reductī sumus.",
+        fullGerman: "Wir (Geiseln) sind zurückgeführt worden.",
+        distractors: [
+          { word: "reductae", reason: "Falsches Genus: <strong>'reductae'</strong> ist feminin – hier ist <strong>'obsidēs'</strong> maskulin Plural (<strong>'reductī'</strong>)!" },
+          { word: "reductus", reason: "Falscher Numerus: <strong>'reductus'</strong> ist Singular – <strong>'nōs'</strong> ist Plural!" },
+          { word: "erāmus", reason: "Falsches Tempus: <strong>'erāmus'</strong> wäre Plusquamperfekt (<em>'wir waren … worden'</em>) – gesucht ist Perfekt (<strong>'sumus'</strong>)!" },
+          { word: "sum", reason: "Falscher Numerus: <strong>'sum'</strong> ist 1. Person Singular (<em>'ich bin'</em>) – gesucht ist <strong>'nōs'</strong> (1. Pl. → <strong>'sumus'</strong>)!" }
+        ]
+      },
+      {
+        id: 19,
+        personGroup: "1pl",
+        shortTag: "1. Pl. Plqpf.",
+        badgeHint: "1. Pers. Pl. · Plusquamperfekt Passiv",
+        subjectWithHint: "nōs [custōdēs, m. Pl.]",
+        subjectNoHint: "nōs [custōdēs]",
+        germanPred: "… waren getadelt worden.",
+        targetPPP: "reprehēnsī",
+        targetEsse: "erāmus",
+        fullLatin: "Nōs (custōdēs) reprehēnsī erāmus.",
+        fullGerman: "Wir (Wächter) waren getadelt worden.",
+        distractors: [
+          { word: "reprehēnsae", reason: "Falsches Genus: <strong>'reprehēnsae'</strong> ist feminin – <strong>'custōdēs'</strong> ist maskulin Plural (<strong>'reprehēnsī'</strong>)!" },
+          { word: "reprehēnsus", reason: "Falscher Numerus: <strong>'reprehēnsus'</strong> ist Singular – <strong>'nōs'</strong> ist Plural!" },
+          { word: "sumus", reason: "Falsches Tempus: <strong>'sumus'</strong> wäre Perfekt (<em>'wir sind … worden'</em>) – gesucht ist Plusquamperfekt (<strong>'erāmus'</strong>)!" },
+          { word: "eram", reason: "Falscher Numerus: <strong>'eram'</strong> ist 1. Person Singular (<em>'ich war'</em>) – gesucht ist <strong>'nōs'</strong> (1. Pl. → <strong>'erāmus'</strong>)!" }
+        ]
+      },
+      {
+        id: 20,
+        personGroup: "1pl",
+        shortTag: "1. Pl. Perf.",
+        badgeHint: "1. Pers. Pl. · Perfekt Passiv",
+        subjectWithHint: "nōs [puellae, f. Pl.]",
+        subjectNoHint: "nōs [puellae]",
+        germanPred: "… sind aufgenommen worden.",
+        targetPPP: "receptae",
+        targetEsse: "sumus",
+        fullLatin: "Nōs (puellae) receptae sumus.",
+        fullGerman: "Wir (Mädchen) sind aufgenommen worden.",
+        distractors: [
+          { word: "receptī", reason: "Falsches Genus: <strong>'receptī'</strong> ist maskulin – <strong>'puellae'</strong> ist feminin Plural (<strong>'receptae'</strong>)!" },
+          { word: "recepta", reason: "Falscher Numerus: <strong>'recepta'</strong> ist Singular – <strong>'nōs'</strong> ist Plural!" },
+          { word: "erāmus", reason: "Falsches Tempus: <strong>'erāmus'</strong> wäre Plusquamperfekt (<em>'wir waren … worden'</em>) – gesucht ist Perfekt (<strong>'sumus'</strong>)!" },
+          { word: "sunt", reason: "Falsche Person: <strong>'sunt'</strong> ist 3. Person Plural (<em>'sie sind'</em>) – gesucht ist 1. Person Plural (<strong>'sumus'</strong>)!" }
+        ]
+      },
+
+      // ==================== 2. PERSON PLURAL (estis / erātis) ====================
+      {
+        id: 21,
+        personGroup: "2pl",
+        shortTag: "2. Pl. Perf.",
+        badgeHint: "2. Pers. Pl. · Perfekt Passiv",
+        subjectWithHint: "vōs [obsidēs, m. Pl.]",
+        subjectNoHint: "vōs [obsidēs]",
+        germanPred: "… seid ausgewählt worden.",
+        targetPPP: "dēlēctī",
+        targetEsse: "estis",
+        fullLatin: "Vōs (obsidēs) dēlēctī estis.",
+        fullGerman: "Ihr (Geiseln) seid ausgewählt worden.",
+        distractors: [
+          { word: "dēlēctae", reason: "Falsches Genus: <strong>'dēlēctae'</strong> ist feminin – hier ist <strong>'obsidēs'</strong> maskulin Plural (<strong>'dēlēctī'</strong>)!" },
+          { word: "dēlēctus", reason: "Falscher Numerus: <strong>'dēlēctus'</strong> ist Singular – <strong>'vōs'</strong> (ihr) ist Plural!" },
+          { word: "erātis", reason: "Falsches Tempus: <strong>'erātis'</strong> wäre Plusquamperfekt (<em>'ihr wart … worden'</em>) – gesucht ist Perfekt (<strong>'estis'</strong>)!" },
+          { word: "sumus", reason: "Falsche Person: <strong>'sumus'</strong> ist 1. Person Plural (<em>'wir sind'</em>) – gesucht ist 2. Person Plural (<strong>'estis'</strong>)!" },
+          { word: "sunt", reason: "Falsche Person: <strong>'sunt'</strong> ist 3. Person Plural (<em>'sie sind'</em>) – gesucht ist 2. Person Plural (<strong>'estis'</strong>)!" }
+        ]
+      },
+      {
+        id: 22,
+        personGroup: "2pl",
+        shortTag: "2. Pl. Plqpf.",
+        badgeHint: "2. Pers. Pl. · Plusquamperfekt Passiv",
+        subjectWithHint: "vōs [puellae, f. Pl.]",
+        subjectNoHint: "vōs [puellae]",
+        germanPred: "… wart aufgenommen worden.",
+        targetPPP: "receptae",
+        targetEsse: "erātis",
+        fullLatin: "Vōs (puellae) receptae erātis.",
+        fullGerman: "Ihr (Mädchen) wart aufgenommen worden.",
+        distractors: [
+          { word: "receptī", reason: "Falsches Genus: <strong>'receptī'</strong> ist maskulin – <strong>'puellae'</strong> ist feminin Plural (<strong>'receptae'</strong>)!" },
+          { word: "recepta", reason: "Falscher Numerus: <strong>'recepta'</strong> ist Singular – <strong>'vōs'</strong> (ihr) ist Plural!" },
+          { word: "estis", reason: "Falsches Tempus: <strong>'estis'</strong> wäre Perfekt (<em>'ihr seid … worden'</em>) – gesucht ist Plusquamperfekt (<strong>'erātis'</strong>)!" },
+          { word: "erāmus", reason: "Falsche Person: <strong>'erāmus'</strong> ist 1. Person Plural (<em>'wir waren'</em>) – gesucht ist 2. Person Plural (<strong>'erātis'</strong>)!" },
+          { word: "erant", reason: "Falsche Person: <strong>'erant'</strong> ist 3. Person Plural (<em>'sie waren'</em>) – gesucht ist 2. Person Plural (<strong>'erātis'</strong>)!" }
+        ]
+      },
+      {
+        id: 23,
+        personGroup: "2pl",
+        shortTag: "2. Pl. Perf.",
+        badgeHint: "2. Pers. Pl. · Perfekt Passiv",
+        subjectWithHint: "vōs [custōdēs, m. Pl.]",
+        subjectNoHint: "vōs [custōdēs]",
+        germanPred: "… seid gerufen worden.",
+        targetPPP: "vocātī",
+        targetEsse: "estis",
+        fullLatin: "Vōs (custōdēs) vocātī estis.",
+        fullGerman: "Ihr (Wächter) seid gerufen worden.",
+        distractors: [
+          { word: "vocātae", reason: "Falsches Genus: <strong>'vocātae'</strong> ist feminin – <strong>'custōdēs'</strong> ist maskulin Plural (<strong>'vocātī'</strong>)!" },
+          { word: "vocātus", reason: "Falscher Numerus: <strong>'vocātus'</strong> ist Singular – <strong>'vōs'</strong> ist Plural!" },
+          { word: "erātis", reason: "Falsches Tempus: <strong>'erātis'</strong> wäre Plusquamperfekt (<em>'ihr wart … worden'</em>) – gesucht ist Perfekt (<strong>'estis'</strong>)!" },
+          { word: "es", reason: "Falscher Numerus: <strong>'es'</strong> ist 2. Person Singular (<em>'du bist'</em>) – gesucht ist <strong>'vōs'</strong> (2. Pl. → <strong>'estis'</strong>)!" }
+        ]
+      },
+      {
+        id: 24,
+        personGroup: "2pl",
+        shortTag: "2. Pl. Plqpf.",
+        badgeHint: "2. Pers. Pl. · Plusquamperfekt Passiv",
+        subjectWithHint: "vōs [Etrūscī, m. Pl.]",
+        subjectNoHint: "vōs [Etrūscī]",
+        germanPred: "… wart beunruhigt worden.",
+        targetPPP: "sollicitātī",
+        targetEsse: "erātis",
+        fullLatin: "Vōs (Etrūscī) sollicitātī erātis.",
+        fullGerman: "Ihr (Etrusker) wart beunruhigt worden.",
+        distractors: [
+          { word: "sollicitātae", reason: "Falsches Genus: <strong>'sollicitātae'</strong> ist feminin – <strong>'Etrūscī'</strong> ist maskulin Plural (<strong>'sollicitātī'</strong>)!" },
+          { word: "sollicitātus", reason: "Falscher Numerus: <strong>'sollicitātus'</strong> ist Singular – <strong>'vōs'</strong> ist Plural!" },
+          { word: "estis", reason: "Falsches Tempus: <strong>'estis'</strong> wäre Perfekt (<em>'ihr seid … worden'</em>) – gesucht ist Plusquamperfekt (<strong>'erātis'</strong>)!" },
+          { word: "erās", reason: "Falscher Numerus: <strong>'erās'</strong> ist 2. Person Singular (<em>'du warst'</em>) – gesucht ist <strong>'vōs'</strong> (2. Pl. → <strong>'erātis'</strong>)!" }
+        ]
+      },
+      {
+        id: 25,
+        personGroup: "2pl",
+        shortTag: "2. Pl. Perf.",
+        badgeHint: "2. Pers. Pl. · Perfekt Passiv",
+        subjectWithHint: "vōs [puellae, f. Pl.]",
+        subjectNoHint: "vōs [puellae]",
+        germanPred: "… seid gelobt worden.",
+        targetPPP: "laudātae",
+        targetEsse: "estis",
+        fullLatin: "Vōs (puellae) laudātae estis.",
+        fullGerman: "Ihr (Mädchen) seid gelobt worden.",
+        distractors: [
+          { word: "laudātī", reason: "Falsches Genus: <strong>'laudātī'</strong> ist maskulin – <strong>'puellae'</strong> ist feminin Plural (<strong>'laudātae'</strong>)!" },
+          { word: "laudāta", reason: "Falscher Numerus: <strong>'laudāta'</strong> ist Singular – <strong>'vōs'</strong> ist Plural!" },
+          { word: "erātis", reason: "Falsches Tempus: <strong>'erātis'</strong> wäre Plusquamperfekt (<em>'ihr wart … worden'</em>) – gesucht ist Perfekt (<strong>'estis'</strong>)!" },
+          { word: "sumus", reason: "Falsche Person: <strong>'sumus'</strong> ist 1. Person Plural (<em>'wir sind'</em>) – gesucht ist 2. Person Plural (<strong>'estis'</strong>)!" }
+        ]
+      },
+
+      // ==================== 3. PERSON PLURAL (sunt / erant) ====================
+      {
+        id: 26,
+        personGroup: "3pl",
+        shortTag: "3. Pl. Perf.",
+        badgeHint: "3. Pers. Pl. · Perfekt Passiv",
+        subjectWithHint: "custōdēs (m. Pl.)",
+        subjectNoHint: "custōdēs",
+        germanPred: "… sind bestraft worden.",
+        targetPPP: "pūnītī",
+        targetEsse: "sunt",
+        fullLatin: "Custōdēs pūnītī sunt.",
+        fullGerman: "Die Wächter sind bestraft worden.",
+        distractors: [
+          { word: "pūnītae", reason: "Falsches Genus: <strong>'pūnītae'</strong> ist feminin – <strong>'custōdēs'</strong> (Wächter) ist maskulin Plural (<strong>'pūnītī'</strong>)!" },
+          { word: "pūnītus", reason: "Falscher Numerus: <strong>'pūnītus'</strong> ist Singular – <strong>'custōdēs'</strong> ist Plural!" },
+          { word: "erant", reason: "Falsches Tempus: <strong>'erant'</strong> wäre Plusquamperfekt (<em>'waren … worden'</em>) – gesucht ist Perfekt (<strong>'sunt'</strong>)!" },
+          { word: "est", reason: "Falscher Numerus: <strong>'est'</strong> ist Singular – <strong>'custōdēs'</strong> ist Plural (<strong>'sunt'</strong>)!" },
+          { word: "sumus", reason: "Falsche Person: <strong>'sumus'</strong> ist 1. Person Plural (<em>'wir sind'</em>) – gesucht ist 3. Person Plural (<strong>'sunt'</strong>)!" }
+        ]
+      },
+      {
+        id: 27,
+        personGroup: "3pl",
+        shortTag: "3. Pl. Plqpf.",
+        badgeHint: "3. Pers. Pl. · Plusquamperfekt Passiv",
+        subjectWithHint: "tēla (n. Pl.)",
+        subjectNoHint: "tēla",
+        germanPred: "… waren geworfen worden.",
+        targetPPP: "iacta",
+        targetEsse: "erant",
+        fullLatin: "Tēla iacta erant.",
+        fullGerman: "Die Geschosse waren geworfen worden.",
+        distractors: [
+          { word: "iactī", reason: "Falsches Genus: <strong>'iactī'</strong> ist maskulin – <strong>'tēla'</strong> (von <em>tēlum</em>) ist Neutrum Plural (<strong>'-a'</strong>)!" },
+          { word: "iactum", reason: "Falscher Numerus: <strong>'iactum'</strong> ist Singular – <strong>'tēla'</strong> ist Neutrum Plural (<strong>'iacta'</strong>)!" },
+          { word: "sunt", reason: "Falsches Tempus: <strong>'sunt'</strong> wäre Perfekt (<em>'sind … worden'</em>) – gesucht ist Plusquamperfekt (<strong>'erant'</strong>)!" },
+          { word: "erat", reason: "Falscher Numerus: <strong>'erat'</strong> ist Singular – <strong>'tēla'</strong> ist Plural (<strong>'erant'</strong>)!" }
+        ]
+      },
+      {
+        id: 28,
+        personGroup: "3pl",
+        shortTag: "3. Pl. Perf.",
+        badgeHint: "3. Pers. Pl. · Perfekt Passiv",
+        subjectWithHint: "puellae (f. Pl.)",
+        subjectNoHint: "puellae",
+        germanPred: "… sind zurückgeführt worden.",
+        targetPPP: "reductae",
+        targetEsse: "sunt",
+        fullLatin: "Puellae reductae sunt.",
+        fullGerman: "Die Mädchen sind zurückgeführt worden.",
+        distractors: [
+          { word: "reductī", reason: "Falsches Genus: <strong>'reductī'</strong> ist maskulin – <strong>'puellae'</strong> ist feminin Plural (<strong>'reductae'</strong>)!" },
+          { word: "reducta", reason: "Falscher Numerus: <strong>'reducta'</strong> ist Singular – <strong>'puellae'</strong> ist Plural!" },
+          { word: "erant", reason: "Falsches Tempus: <strong>'erant'</strong> wäre Plusquamperfekt (<em>'waren … worden'</em>) – gesucht ist Perfekt (<strong>'sunt'</strong>)!" },
+          { word: "estis", reason: "Falsche Person: <strong>'estis'</strong> ist 2. Person Plural (<em>'ihr seid'</em>) – gesucht ist 3. Person Plural (<strong>'sunt'</strong>)!" }
+        ]
+      },
+      {
+        id: 29,
+        personGroup: "3pl",
+        shortTag: "3. Pl. Plqpf.",
+        badgeHint: "3. Pers. Pl. · Plusquamperfekt Passiv",
+        subjectWithHint: "obsidēs (m. Pl.)",
+        subjectNoHint: "obsidēs",
+        germanPred: "… waren getötet worden.",
+        targetPPP: "caesī",
+        targetEsse: "erant",
+        fullLatin: "Obsidēs caesī erant.",
+        fullGerman: "Die Geiseln waren getötet worden.",
+        distractors: [
+          { word: "caesae", reason: "Falsches Genus: <strong>'caesae'</strong> ist feminin – hier ist <strong>'obsidēs'</strong> maskulin Plural (<strong>'caesī'</strong>)!" },
+          { word: "caesus", reason: "Falscher Numerus: <strong>'caesus'</strong> ist Singular – <strong>'obsidēs'</strong> ist Plural!" },
+          { word: "sunt", reason: "Falsches Tempus: <strong>'sunt'</strong> wäre Perfekt (<em>'sind … worden'</em>) – gesucht ist Plusquamperfekt (<strong>'erant'</strong>)!" },
+          { word: "erātis", reason: "Falsche Person: <strong>'erātis'</strong> ist 2. Person Plural (<em>'ihr wart'</em>) – gesucht ist 3. Person Plural (<strong>'erant'</strong>)!" }
+        ]
+      },
+      {
+        id: 30,
+        personGroup: "3pl",
+        shortTag: "3. Pl. Perf.",
+        badgeHint: "3. Pers. Pl. · Perfekt Passiv",
+        subjectWithHint: "castra (n. Pl.)",
+        subjectNoHint: "castra",
+        germanPred: "… sind aufgeschlagen worden.",
+        targetPPP: "posita",
+        targetEsse: "sunt",
+        fullLatin: "Castra posita sunt.",
+        fullGerman: "Das Lager (wörtl. die Lager) ist aufgeschlagen worden.",
+        distractors: [
+          { word: "positī", reason: "Falsches Genus: <strong>'castra, -ōrum'</strong> ist Neutrum Plural (<strong>'posita'</strong>), nicht maskulin!" },
+          { word: "positum", reason: "Falscher Numerus: <strong>'castra'</strong> ist im Lateinischen Plural (<strong>'posita'</strong>), nicht Singular!" },
+          { word: "erant", reason: "Falsches Tempus: <strong>'erant'</strong> wäre Plusquamperfekt (<em>'waren … worden'</em>) – gesucht ist Perfekt (<strong>'sunt'</strong>)!" },
+          { word: "est", reason: "Falscher Numerus: <strong>'castra'</strong> ist im Lateinischen Plural – es verlangt <strong>'sunt'</strong>, nicht <strong>'est'</strong>!" }
+        ]
+      }
+    ];
+
+    // --------------------------------------------------------------------------
+    // 2. OFFLINE WEB AUDIO SOUND-ENGINE
+    // --------------------------------------------------------------------------
+    var sound = {
+      enabled: true,
+      ctx: null,
+      unlock: function () {
+        try {
+          if (!this.ctx) {
+            var AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (AudioCtx) {
+              this.ctx = new AudioCtx();
+            }
+          }
+          if (this.ctx && this.ctx.state === "suspended") {
+            this.ctx.resume();
+          }
+        } catch (e) {}
+      },
+      playTone: function (freq, type, duration, delay, volume) {
+        if (!this.enabled) return;
+        try {
+          this.unlock();
+          if (!this.ctx) return;
+          var now = this.ctx.currentTime + (delay || 0);
+          var osc = this.ctx.createOscillator();
+          var gain = this.ctx.createGain();
+          osc.type = type;
+          osc.frequency.setValueAtTime(freq, now);
+          gain.gain.setValueAtTime(0.001, now);
+          gain.gain.exponentialRampToValueAtTime(volume || 0.14, now + 0.02);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(now);
+          osc.stop(now + duration + 0.02);
+        } catch (e) {}
+      },
+      playCatch: function () {
+        this.playTone(523.25, "triangle", 0.18, 0, 0.15);
+        this.playTone(659.25, "triangle", 0.22, 0.07, 0.15);
+      },
+      playBonus: function () {
+        this.playTone(783.99, "sine", 0.14, 0, 0.11);
+      },
+      playComplete: function () {
+        this.playTone(523.25, "triangle", 0.18, 0, 0.16);
+        this.playTone(659.25, "triangle", 0.18, 0.09, 0.16);
+        this.playTone(783.99, "triangle", 0.20, 0.18, 0.16);
+        this.playTone(1046.50, "triangle", 0.34, 0.27, 0.18);
+      },
+      playError: function () {
+        this.playTone(220.0, "sawtooth", 0.20, 0, 0.11);
+        this.playTone(174.61, "sawtooth", 0.28, 0.11, 0.11);
+      }
+    };
+
+    // --------------------------------------------------------------------------
+    // 3. SPIELKONFIGURATION & ZUSTAND (10 Aufgaben pro Runde, 5 Herzen)
+    // --------------------------------------------------------------------------
+    var LEVEL_CONFIG = {
+      1: {
+        showHints: true,
+        speedFactor: 0.15,
+        spawnInterval: 1.65,
+        maxTokens: 3
+      },
+      2: {
+        showHints: true,
+        speedFactor: 0.21,
+        spawnInterval: 1.30,
+        maxTokens: 4
+      },
+      3: {
+        showHints: false,
+        speedFactor: 0.27,
+        spawnInterval: 1.08,
+        maxTokens: 5
+      }
+    };
+
+    var ROUND_SIZE = 10;
+    var MAX_LIVES = 5;
+
+    var state = {
+      status: "start", // "start" | "playing" | "celebrating" | "error" | "paused" | "summary"
+      level: 1,
+      lives: MAX_LIVES,
+      score: 0,
+      taskIndex: 0, // 0..9 innerhalb der 10-Aufgaben-Runde
+      roundTasks: [],
+      solvedHistory: [],
+      currentTask: null,
+      caughtPPP: false,
+      caughtEsse: false,
+      celebrateTimer: 0,
+      errorTimer: 0,
+      errorMaxTime: 2.8,
+      spawnTimer: 0,
+      spawnCounter: 0,
+      tokens: [],
+      floatingTexts: [],
+      particles: [],
+      player: {
+        x: 0.5,
+        targetX: 0.5,
+        vx: 0,
+        bobPhase: 0,
+        catchFlash: 0
+      },
+      keys: {
+        left: false,
+        right: false
+      },
+      touchStartX: 0,
+      touchMoved: false,
+      lastFrameTime: 0,
+      lastActionStamp: 0
+    };
+
+    function allowButtonAction() {
+      var now = Date.now();
+      if (now - state.lastActionStamp < 120) {
+        return false;
+      }
+      state.lastActionStamp = now;
+      return true;
+    }
+
+    // --------------------------------------------------------------------------
+    // 4. DOM-REFERENZEN & CANVAS-GRÖSSE
+    // --------------------------------------------------------------------------
+    var canvas = document.getElementById("game-canvas");
+    var ctx = canvas.getContext("2d");
+    var wrapper = document.getElementById("canvas-wrapper");
+
+    var ui = {
+      heartsContainer: document.getElementById("hearts-container"),
+      progressVal: document.getElementById("progress-val"),
+      scoreVal: document.getElementById("score-val"),
+      taskMetaBadge: document.getElementById("task-meta-badge"),
+      taskSubject: document.getElementById("task-subject"),
+      taskGerman: document.getElementById("task-german"),
+      slotPPP: document.getElementById("slot-ppp"),
+      slotEsse: document.getElementById("slot-esse"),
+      successToast: document.getElementById("success-toast"),
+      toastLatin: document.getElementById("toast-latin-text"),
+      toastGerman: document.getElementById("toast-german-text"),
+      screenStart: document.getElementById("screen-start"),
+      screenError: document.getElementById("screen-error"),
+      screenPause: document.getElementById("screen-pause"),
+      screenSummary: document.getElementById("screen-summary"),
+      errWord: document.getElementById("err-word"),
+      errContext: document.getElementById("err-context"),
+      errExplanation: document.getElementById("err-explanation"),
+      errTimerBar: document.getElementById("error-timer-bar"),
+      btnErrContinue: document.getElementById("btn-error-continue"),
+      sumStars: document.getElementById("sum-stars"),
+      sumTitle: document.getElementById("sum-title"),
+      sumSubtitle: document.getElementById("sum-subtitle"),
+      sumScore: document.getElementById("sum-score"),
+      sumSolved: document.getElementById("sum-solved"),
+      sumHearts: document.getElementById("sum-hearts"),
+      sumTableBody: document.getElementById("sum-table-body"),
+      btnSound: document.getElementById("btn-sound")
+    };
+
+    var canvasWidth = 800;
+    var canvasHeight = 600;
+
+    function resizeCanvas() {
+      if (!wrapper || !canvas) return;
+      var rect = wrapper.getBoundingClientRect();
+      var dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvasWidth = Math.max(300, rect.width);
+      canvasHeight = Math.max(240, rect.height);
+      canvas.width = Math.floor(canvasWidth * dpr);
+      canvas.height = Math.floor(canvasHeight * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    window.addEventListener("resize", resizeCanvas);
+
+    // --------------------------------------------------------------------------
+    // 5. RUNDENGENERATOR (Garantiert alle 6 Person/Numerus-Kombinationen!)
+    // --------------------------------------------------------------------------
+    function shuffleArray(arr) {
+      var copy = arr.slice();
+      for (var i = copy.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var tmp = copy[i];
+        copy[i] = copy[j];
+        copy[j] = tmp;
+      }
+      return copy;
+    }
+
+    function buildBalancedRound() {
+      var groups = ["1sg", "2sg", "3sg", "1pl", "2pl", "3pl"];
+      var selected = [];
+      var usedIds = {};
+
+      // Schritt 1: Aus jeder der 6 Personen/Numeri garantiert 1 Aufgabe ziehen
+      for (var g = 0; g < groups.length; g++) {
+        var grp = groups[g];
+        var candidates = [];
+        for (var i = 0; i < TASK_POOL.length; i++) {
+          if (TASK_POOL[i].personGroup === grp) {
+            candidates.push(TASK_POOL[i]);
+          }
+        }
+        var chosen = candidates[Math.floor(Math.random() * candidates.length)];
+        selected.push(chosen);
+        usedIds[chosen.id] = true;
+      }
+
+      // Schritt 2: 4 weitere Aufgaben aus 4 zufälligen Gruppen ergänzen (ergibt 10 Aufgaben)
+      var extraGroups = shuffleArray(groups).slice(0, ROUND_SIZE - groups.length);
+      for (var eg = 0; eg < extraGroups.length; eg++) {
+        var targetGrp = extraGroups[eg];
+        var extraCandidates = [];
+        for (var j = 0; j < TASK_POOL.length; j++) {
+          if (TASK_POOL[j].personGroup === targetGrp && !usedIds[TASK_POOL[j].id]) {
+            extraCandidates.push(TASK_POOL[j]);
+          }
+        }
+        if (extraCandidates.length > 0) {
+          var extraPick = extraCandidates[Math.floor(Math.random() * extraCandidates.length)];
+          selected.push(extraPick);
+          usedIds[extraPick.id] = true;
+        }
+      }
+
+      return shuffleArray(selected);
+    }
+
+    // --------------------------------------------------------------------------
+    // 6. SPIELSTEUERUNG & HUD-AKTUALISIERUNG
+    // --------------------------------------------------------------------------
+    function showOverlay(overlayEl) {
+      var overlays = [ui.screenStart, ui.screenError, ui.screenPause, ui.screenSummary];
+      for (var i = 0; i < overlays.length; i++) {
+        if (overlays[i]) overlays[i].classList.add("hidden");
+      }
+      if (overlayEl) {
+        overlayEl.classList.remove("hidden");
+      }
+    }
+
+    function updateHUD() {
+      var hearts = ui.heartsContainer.querySelectorAll(".heart-icon");
+      for (var i = 0; i < hearts.length; i++) {
+        if (i < state.lives) {
+          hearts[i].classList.remove("lost");
+        } else {
+          hearts[i].classList.add("lost");
+        }
+      }
+
+      var displayStep = Math.min(ROUND_SIZE, state.taskIndex + 1);
+      ui.progressVal.textContent = displayStep + " / " + ROUND_SIZE;
+      ui.scoreVal.textContent = String(state.score);
+
+      if (!state.currentTask) return;
+      var cfg = LEVEL_CONFIG[state.level] || LEVEL_CONFIG[1];
+
+      if (cfg.showHints) {
+        ui.taskMetaBadge.style.display = "inline-block";
+        ui.taskMetaBadge.textContent = state.currentTask.badgeHint;
+        ui.taskSubject.textContent = state.currentTask.subjectWithHint;
+      } else {
+        ui.taskMetaBadge.style.display = "none";
+        ui.taskSubject.textContent = state.currentTask.subjectNoHint;
+      }
+
+      ui.taskGerman.textContent = "„" + state.currentTask.germanPred + "“";
+
+      if (state.caughtPPP) {
+        ui.slotPPP.textContent = state.currentTask.targetPPP + " ✓";
+        ui.slotPPP.classList.add("filled");
+      } else {
+        ui.slotPPP.textContent = "[ PPP ]";
+        ui.slotPPP.classList.remove("filled");
+      }
+
+      if (state.caughtEsse) {
+        ui.slotEsse.textContent = state.currentTask.targetEsse + " ✓";
+        ui.slotEsse.classList.add("filled");
+      } else {
+        ui.slotEsse.textContent = "[ esse ]";
+        ui.slotEsse.classList.remove("filled");
+      }
+    }
+
+    function loadCurrentTask() {
+      if (state.taskIndex >= state.roundTasks.length) {
+        finishRound(true);
+        return;
+      }
+      state.currentTask = state.roundTasks[state.taskIndex];
+      state.caughtPPP = false;
+      state.caughtEsse = false;
+      state.tokens = [];
+      state.spawnTimer = 0.25;
+      state.spawnCounter = 0;
+      updateHUD();
+      spawnToken();
+    }
+
+    window.startGame = function (level) {
+      if (!allowButtonAction()) return;
+      sound.unlock();
+      resizeCanvas();
+      state.level = LEVEL_CONFIG[level] ? level : 1;
+      state.lives = MAX_LIVES;
+      state.score = 0;
+      state.taskIndex = 0;
+      state.roundTasks = buildBalancedRound();
+      state.solvedHistory = [];
+      state.floatingTexts = [];
+      state.particles = [];
+      state.player.x = 0.5;
+      state.player.targetX = 0.5;
+      state.status = "playing";
+
+      ui.successToast.classList.remove("visible");
+      showOverlay(null);
+      loadCurrentTask();
+    };
+
+    window.pauseGame = function () {
+      if (!allowButtonAction()) return;
+      if (state.status === "playing") {
+        state.status = "paused";
+        showOverlay(ui.screenPause);
+      }
+    };
+
+    window.resumeGame = function () {
+      if (!allowButtonAction()) return;
+      if (state.status === "paused") {
+        state.status = "playing";
+        showOverlay(null);
+      }
+    };
+
+    window.returnToMenu = function () {
+      if (!allowButtonAction()) return;
+      ui.successToast.classList.remove("visible");
+      state.status = "start";
+      showOverlay(ui.screenStart);
+    };
+
+    window.restartGame = function () {
+      window.startGame(state.level);
+    };
+
+    window.toggleSound = function () {
+      if (!allowButtonAction()) return;
+      sound.enabled = !sound.enabled;
+      ui.btnSound.textContent = sound.enabled ? "🔊" : "🔇";
+      if (sound.enabled) sound.unlock();
+    };
+
+    window.continueAfterError = function (isAuto) {
+      if (!isAuto && !allowButtonAction()) return;
+      if (state.status !== "error") return;
+
+      if (state.lives <= 0) {
+        finishRound(false);
+      } else {
+        var safeTokens = [];
+        for (var i = 0; i < state.tokens.length; i++) {
+          if (state.tokens[i].y < canvasHeight * 0.45) {
+            safeTokens.push(state.tokens[i]);
+          }
+        }
+        state.tokens = safeTokens;
+        state.status = "playing";
+        showOverlay(null);
+      }
+    };
+
+    // --------------------------------------------------------------------------
+    // 7. SPAWNER FÜR FALLENDE PERGAMENT-TAFELN
+    // --------------------------------------------------------------------------
+    function spawnToken() {
+      var task = state.currentTask;
+      if (!task) return;
+
+      var cfg = LEVEL_CONFIG[state.level] || LEVEL_CONFIG[1];
+      if (state.tokens.length >= cfg.maxTokens) return;
+
+      state.spawnCounter++;
+
+      var needed = [];
+      if (!state.caughtPPP) needed.push({ word: task.targetPPP });
+      if (!state.caughtEsse) needed.push({ word: task.targetEsse });
+
+      var neededOnScreen = false;
+      for (var i = 0; i < state.tokens.length; i++) {
+        var tk = state.tokens[i];
+        if ((tk.word === task.targetPPP && !state.caughtPPP) ||
+            (tk.word === task.targetEsse && !state.caughtEsse)) {
+          neededOnScreen = true;
+          break;
+        }
+      }
+
+      var chosen = null;
+      if (needed.length > 0 && (!neededOnScreen || state.spawnCounter % 2 === 0)) {
+        var pick = needed[Math.floor(Math.random() * needed.length)];
+        chosen = {
+          word: pick.word,
+          reason: ""
+        };
+      } else {
+        var dPick = task.distractors[Math.floor(Math.random() * task.distractors.length)];
+        chosen = {
+          word: dPick.word,
+          reason: dPick.reason
+        };
+      }
+
+      var tokenWidth = Math.max(106, Math.min(152, chosen.word.length * 11 + 42));
+      var tokenHeight = 44;
+      var margin = tokenWidth * 0.6 + 14;
+      var usableWidth = Math.max(80, canvasWidth - margin * 2);
+
+      var x = margin + Math.random() * usableWidth;
+      for (var attempt = 0; attempt < 10; attempt++) {
+        var candidateX = margin + Math.random() * usableWidth;
+        var collides = false;
+        for (var j = 0; j < state.tokens.length; j++) {
+          var existing = state.tokens[j];
+          if (existing.y < 140 && Math.abs(existing.x - candidateX) < tokenWidth + 18) {
+            collides = true;
+            break;
+          }
+        }
+        if (!collides) {
+          x = candidateX;
+          break;
+        }
+      }
+
+      var baseSpeed = canvasHeight * cfg.speedFactor;
+      var speedJitter = baseSpeed * (0.93 + Math.random() * 0.14);
+
+      state.tokens.push({
+        x: x,
+        y: -28,
+        width: tokenWidth,
+        height: tokenHeight,
+        vy: speedJitter,
+        swayOffset: Math.random() * Math.PI * 2,
+        word: chosen.word,
+        reason: chosen.reason
+      });
+    }
+
+    // --------------------------------------------------------------------------
+    // 8. PARTIKEL, FANG-LOGIK & RUNDENABSCHLUSS
+    // --------------------------------------------------------------------------
+    function addFloatingText(x, y, text, color) {
+      state.floatingTexts.push({ x: x, y: y, text: text, color: color, life: 1.0 });
+    }
+
+    function addSparkles(x, y, color) {
+      for (var i = 0; i < 14; i++) {
+        var angle = (Math.PI * 2 * i) / 14 + Math.random() * 0.3;
+        var speed = 60 + Math.random() * 110;
+        state.particles.push({
+          x: x,
+          y: y,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed - 30,
+          radius: 3 + Math.random() * 3,
+          color: color,
+          life: 1.0
+        });
+      }
+    }
+
+    function handleTokenCatch(token, basketX, basketY) {
+      var task = state.currentTask;
+      if (!task) return;
+
+      if (token.word === task.targetPPP) {
+        state.player.catchFlash = 1.0;
+        if (!state.caughtPPP) {
+          state.caughtPPP = true;
+          state.score += 50;
+          sound.playCatch();
+          addFloatingText(basketX, basketY - 28, "+50 PPP ✓", "#1E7E4E");
+          addSparkles(basketX, basketY - 10, "#1E7E4E");
+        } else {
+          state.score += 10;
+          sound.playBonus();
+          addFloatingText(basketX, basketY - 28, "+10 Bonus", "#9E7B16");
+        }
+        updateHUD();
+        checkTaskCompletion();
+        return;
+      }
+
+      if (token.word === task.targetEsse) {
+        state.player.catchFlash = 1.0;
+        if (!state.caughtEsse) {
+          state.caughtEsse = true;
+          state.score += 50;
+          sound.playCatch();
+          addFloatingText(basketX, basketY - 28, "+50 esse ✓", "#1E7E4E");
+          addSparkles(basketX, basketY - 10, "#1E7E4E");
+        } else {
+          state.score += 10;
+          sound.playBonus();
+          addFloatingText(basketX, basketY - 28, "+10 Bonus", "#9E7B16");
+        }
+        updateHUD();
+        checkTaskCompletion();
+        return;
+      }
+
+      // Falscher Baustein gefangen -> 1 Herz abziehen & diagnostisches Overlay zeigen
+      state.lives = Math.max(0, state.lives - 1);
+      sound.playError();
+      addSparkles(basketX, basketY - 10, "#8B2635");
+      updateHUD();
+
+      var cfg = LEVEL_CONFIG[state.level] || LEVEL_CONFIG[1];
+      var subjLabel = cfg.showHints ? task.subjectWithHint : task.subjectNoHint;
+
+      ui.errWord.textContent = "„" + token.word + "“";
+      ui.errContext.innerHTML = "Gesucht für: <strong>" + subjLabel + "</strong> · „" + task.germanPred + "“";
+      ui.errExplanation.innerHTML = token.reason;
+
+      state.errorTimer = state.errorMaxTime;
+      ui.errTimerBar.style.width = "100%";
+      ui.btnErrContinue.textContent = "Weiter (2,8s) ▶";
+
+      state.status = "error";
+      showOverlay(ui.screenError);
+    }
+
+    function checkTaskCompletion() {
+      if (state.caughtPPP && state.caughtEsse) {
+        state.status = "celebrating";
+        state.celebrateTimer = 1.35;
+        state.score += 100;
+        state.solvedHistory.push(state.currentTask);
+        sound.playComplete();
+        updateHUD();
+
+        ui.toastLatin.textContent = state.currentTask.fullLatin;
+        ui.toastGerman.textContent = state.currentTask.fullGerman;
+        ui.successToast.classList.add("visible");
+      }
+    }
+
+    function finishRound(completedAll) {
+      state.status = "summary";
+      ui.successToast.classList.remove("visible");
+
+      var solvedCount = state.solvedHistory.length;
+      var starsStr = "⭐";
+      if (completedAll && state.lives >= 4) {
+        starsStr = "⭐⭐⭐";
+      } else if (completedAll || solvedCount >= 6) {
+        starsStr = "⭐⭐";
+      }
+
+      ui.sumStars.textContent = starsStr;
+      ui.sumTitle.textContent = completedAll ? "Optime fēcistī!" : "Bene fēcistī!";
+      ui.sumSubtitle.textContent = completedAll
+        ? "Runde abgeschlossen: Alle 10 Aufgaben aus 1.–3. Person Sg. & Pl. gemeistert!"
+        : "Alle 5 Herzen wurden verbraucht – hier ist deine bisherige Übersicht:";
+
+      ui.sumScore.textContent = String(state.score);
+      ui.sumSolved.textContent = solvedCount + " / " + ROUND_SIZE;
+      ui.sumHearts.textContent = state.lives + " / " + MAX_LIVES;
+
+      // Ergebnissicherungs-Tabelle aufbauen
+      ui.sumTableBody.innerHTML = "";
+      if (solvedCount === 0) {
+        var emptyRow = document.createElement("tr");
+        emptyRow.innerHTML = '<td colspan="4" style="text-align:center; color:#526475; padding:12px;">Noch keine Form vollständig gefangen – starte direkt eine neue Runde!</td>';
+        ui.sumTableBody.appendChild(emptyRow);
+      } else {
+        for (var i = 0; i < state.solvedHistory.length; i++) {
+          var item = state.solvedHistory[i];
+          var tr = document.createElement("tr");
+          tr.innerHTML =
+            "<td>" + (i + 1) + ".</td>" +
+            '<td><span class="person-tag">' + item.shortTag + "</span></td>" +
+            '<td class="latin-cell">' + item.fullLatin + "</td>" +
+            "<td>" + item.fullGerman + "</td>";
+          ui.sumTableBody.appendChild(tr);
+        }
+      }
+
+      showOverlay(ui.screenSummary);
+    }
+
+    // --------------------------------------------------------------------------
+    // 9. IPAD-TOUCH-, MAUS- & TASTATURSTEUERUNG
+    // --------------------------------------------------------------------------
+    function getRelativeX(clientX) {
+      var rect = canvas.getBoundingClientRect();
+      var relX = (clientX - rect.left) / Math.max(1, rect.width);
+      return Math.max(0.08, Math.min(0.92, relX));
+    }
+
+    canvas.addEventListener("touchstart", function (e) {
+      if (e.cancelable) e.preventDefault();
+      sound.unlock();
+      if (state.status !== "playing") return;
+      if (e.touches && e.touches.length > 0) {
+        var clientX = e.touches[0].clientX;
+        state.touchStartX = clientX;
+        state.touchMoved = false;
+        state.player.targetX = getRelativeX(clientX);
+      }
+    }, { passive: false });
+
+    canvas.addEventListener("touchmove", function (e) {
+      if (e.cancelable) e.preventDefault();
+      if (state.status !== "playing") return;
+      if (e.touches && e.touches.length > 0) {
+        var clientX = e.touches[0].clientX;
+        if (Math.abs(clientX - state.touchStartX) > 10) {
+          state.touchMoved = true;
+        }
+        state.player.targetX = getRelativeX(clientX);
+      }
+    }, { passive: false });
+
+    canvas.addEventListener("touchend", function (e) {
+      if (e.cancelable) e.preventDefault();
+      if (state.status !== "playing") return;
+      if (!state.touchMoved && e.changedTouches && e.changedTouches.length > 0) {
+        var tapRelX = getRelativeX(e.changedTouches[0].clientX);
+        if (tapRelX < 0.5) {
+          state.player.targetX = Math.max(0.08, Math.min(tapRelX, state.player.x - 0.16));
+        } else {
+          state.player.targetX = Math.min(0.92, Math.max(tapRelX, state.player.x + 0.16));
+        }
+      }
+    }, { passive: false });
+
+    canvas.addEventListener("mousemove", function (e) {
+      if (state.status !== "playing") return;
+      state.player.targetX = getRelativeX(e.clientX);
+    });
+
+    canvas.addEventListener("mousedown", function (e) {
+      sound.unlock();
+      if (state.status !== "playing") return;
+      state.player.targetX = getRelativeX(e.clientX);
+    });
+
+    window.addEventListener("keydown", function (e) {
+      if (e.key === "ArrowLeft" || e.key === "a" || e.key === "A") {
+        state.keys.left = true;
+      } else if (e.key === "ArrowRight" || e.key === "d" || e.key === "D") {
+        state.keys.right = true;
+      } else if ((e.key === "Enter" || e.key === " ") && state.status === "error") {
+        e.preventDefault();
+        window.continueAfterError(false);
+      }
+    });
+
+    window.addEventListener("keyup", function (e) {
+      if (e.key === "ArrowLeft" || e.key === "a" || e.key === "A") {
+        state.keys.left = false;
+      } else if (e.key === "ArrowRight" || e.key === "d" || e.key === "D") {
+        state.keys.right = false;
+      }
+    });
+
+    function bindButtonListeners() {
+      var btnL1 = document.getElementById("btn-level-1");
+      var btnL2 = document.getElementById("btn-level-2");
+      var btnL3 = document.getElementById("btn-level-3");
+      var btnPause = document.getElementById("btn-pause");
+      var btnSound = document.getElementById("btn-sound");
+      var btnMenu = document.getElementById("btn-menu");
+      var btnErrCont = document.getElementById("btn-error-continue");
+      var btnResume = document.getElementById("btn-resume");
+      var btnPauseMenu = document.getElementById("btn-pause-menu");
+      var btnRestart = document.getElementById("btn-restart");
+      var btnGoMenu = document.getElementById("btn-go-menu");
+
+      if (btnL1) btnL1.addEventListener("click", function () { window.startGame(1); });
+      if (btnL2) btnL2.addEventListener("click", function () { window.startGame(2); });
+      if (btnL3) btnL3.addEventListener("click", function () { window.startGame(3); });
+      if (btnPause) btnPause.addEventListener("click", function () { window.pauseGame(); });
+      if (btnSound) btnSound.addEventListener("click", function () { window.toggleSound(); });
+      if (btnMenu) btnMenu.addEventListener("click", function () { window.returnToMenu(); });
+      if (btnErrCont) btnErrCont.addEventListener("click", function () { window.continueAfterError(false); });
+      if (btnResume) btnResume.addEventListener("click", function () { window.resumeGame(); });
+      if (btnPauseMenu) btnPauseMenu.addEventListener("click", function () { window.returnToMenu(); });
+      if (btnRestart) btnRestart.addEventListener("click", function () { window.restartGame(); });
+      if (btnGoMenu) btnGoMenu.addEventListener("click", function () { window.returnToMenu(); });
+    }
+
+    // --------------------------------------------------------------------------
+    // 10. UPDATE-SCHLEIFE
+    // --------------------------------------------------------------------------
+    function update(dt) {
+      for (var i = state.floatingTexts.length - 1; i >= 0; i--) {
+        var ft = state.floatingTexts[i];
+        ft.y -= 42 * dt;
+        ft.life -= dt * 1.1;
+        if (ft.life <= 0) state.floatingTexts.splice(i, 1);
+      }
+
+      for (var j = state.particles.length - 1; j >= 0; j--) {
+        var p = state.particles[j];
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        p.vy += 220 * dt;
+        p.life -= dt * 1.5;
+        if (p.life <= 0) state.particles.splice(j, 1);
+      }
+
+      if (state.player.catchFlash > 0) {
+        state.player.catchFlash = Math.max(0, state.player.catchFlash - dt * 3);
+      }
+
+      if (state.status === "error") {
+        state.errorTimer -= dt;
+        var ratio = Math.max(0, state.errorTimer / state.errorMaxTime);
+        ui.errTimerBar.style.width = (ratio * 100).toFixed(1) + "%";
+        ui.btnErrContinue.textContent = "Weiter (" + Math.max(0, state.errorTimer).toFixed(1).replace(".", ",") + "s) ▶";
+        if (state.errorTimer <= 0) {
+          window.continueAfterError(true);
+        }
+        return;
+      }
+
+      if (state.status === "celebrating") {
+        state.celebrateTimer -= dt;
+        if (state.celebrateTimer <= 0) {
+          ui.successToast.classList.remove("visible");
+          state.taskIndex += 1;
+          if (state.taskIndex >= ROUND_SIZE) {
+            finishRound(true);
+          } else {
+            state.status = "playing";
+            loadCurrentTask();
+          }
+        }
+        return;
+      }
+
+      if (state.status !== "playing") return;
+
+      var keySpeed = 0.85;
+      if (state.keys.left) {
+        state.player.targetX = Math.max(0.08, state.player.targetX - keySpeed * dt);
+      }
+      if (state.keys.right) {
+        state.player.targetX = Math.min(0.92, state.player.targetX + keySpeed * dt);
+      }
+
+      var prevX = state.player.x;
+      state.player.x += (state.player.targetX - state.player.x) * Math.min(1, dt * 18);
+      state.player.vx = (state.player.x - prevX) / Math.max(0.001, dt);
+      if (Math.abs(state.player.vx) > 0.02) {
+        state.player.bobPhase += dt * 14;
+      }
+
+      var cfg = LEVEL_CONFIG[state.level] || LEVEL_CONFIG[1];
+      state.spawnTimer -= dt;
+      if (state.spawnTimer <= 0) {
+        spawnToken();
+        state.spawnTimer = cfg.spawnInterval;
+      }
+
+      var basketWidth = Math.max(116, Math.min(150, canvasWidth * 0.16));
+      var basketX = state.player.x * canvasWidth;
+      var groundY = canvasHeight - 24;
+      var basketY = groundY - 76;
+
+      var remainingTokens = [];
+      for (var k = 0; k < state.tokens.length; k++) {
+        var token = state.tokens[k];
+        token.y += token.vy * dt;
+        token.swayOffset += dt * 2.4;
+
+        var drawX = token.x + Math.sin(token.swayOffset) * 5;
+        var withinX = Math.abs(drawX - basketX) < (basketWidth * 0.5 + token.width * 0.34);
+        var withinY =
+          token.y + token.height * 0.45 >= basketY - 10 &&
+          token.y - token.height * 0.45 <= basketY + 26;
+
+        if (withinX && withinY) {
+          handleTokenCatch(token, basketX, basketY);
+          if (state.status !== "playing") {
+            return;
+          }
+          continue;
+        }
+
+        if (token.y - token.height <= canvasHeight + 10) {
+          remainingTokens.push(token);
+        }
+      }
+      state.tokens = remainingTokens;
+    }
+
+    // --------------------------------------------------------------------------
+    // 11. 2D-ZEICHENROUTINEN (Antike Kolonnade, Figur, Korb & Pergament-Tafeln)
+    // --------------------------------------------------------------------------
+    function drawBackground() {
+      var skyGrad = ctx.createLinearGradient(0, 0, 0, canvasHeight);
+      skyGrad.addColorStop(0, "#FDF6E3");
+      skyGrad.addColorStop(0.75, "#F6E6C2");
+      skyGrad.addColorStop(1, "#EAD29E");
+      ctx.fillStyle = skyGrad;
+      ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+      var groundY = canvasHeight - 24;
+      var archY = groundY - 125;
+      ctx.save();
+      ctx.fillStyle = "rgba(31, 58, 82, 0.08)";
+      ctx.fillRect(0, archY, canvasWidth, 14);
+      var span = 74;
+      for (var x = -20; x < canvasWidth + span; x += span) {
+        ctx.fillRect(x, archY + 14, 16, 112);
+        ctx.beginPath();
+        ctx.arc(x + 16 + (span - 16) / 2, archY + 34, (span - 16) / 2, Math.PI, 0, false);
+        ctx.lineTo(x + span, archY + 14);
+        ctx.lineTo(x + 16, archY + 14);
+        ctx.closePath();
+        ctx.fill();
+      }
+      ctx.restore();
+
+      ctx.fillStyle = "#D8BE8B";
+      ctx.fillRect(0, groundY, canvasWidth, 24);
+      ctx.strokeStyle = "#B89B64";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(0, groundY);
+      ctx.lineTo(canvasWidth, groundY);
+      ctx.stroke();
+
+      for (var sx = 20; sx < canvasWidth; sx += 68) {
+        ctx.beginPath();
+        ctx.moveTo(sx, groundY);
+        ctx.lineTo(sx - 10, canvasHeight);
+        ctx.stroke();
+      }
+    }
+
+    function drawRomanCharacter() {
+      var groundY = canvasHeight - 24;
+      var centerX = state.player.x * canvasWidth;
+      var bob = Math.sin(state.player.bobPhase) * 3;
+      var lean = Math.max(-0.14, Math.min(0.14, state.player.vx * 0.08));
+      var basketWidth = Math.max(116, Math.min(150, canvasWidth * 0.16));
+
+      ctx.save();
+      ctx.translate(centerX, groundY);
+
+      ctx.fillStyle = "rgba(31, 58, 82, 0.18)";
+      ctx.beginPath();
+      ctx.ellipse(0, 2, basketWidth * 0.48, 7, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.translate(0, bob);
+      ctx.rotate(lean);
+
+      // Beine & Sandalen
+      ctx.fillStyle = "#E5B58B";
+      ctx.fillRect(-15, -26, 9, 24);
+      ctx.fillRect(6, -26, 9, 24);
+      ctx.fillStyle = "#6E472B";
+      ctx.fillRect(-17, -6, 13, 6);
+      ctx.fillRect(4, -6, 13, 6);
+
+      // Tunika
+      ctx.fillStyle = "#FFFDF7";
+      ctx.strokeStyle = "#1F3A52";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(-22, -22);
+      ctx.lineTo(-17, -64);
+      ctx.lineTo(17, -64);
+      ctx.lineTo(22, -22);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // Terrakotta-Umhang
+      ctx.fillStyle = "#C85A32";
+      ctx.beginPath();
+      ctx.moveTo(-18, -64);
+      ctx.quadraticCurveTo(0, -45, 20, -54);
+      ctx.lineTo(17, -64);
+      ctx.closePath();
+      ctx.fill();
+
+      // Goldener Gürtel
+      ctx.fillStyle = "#D4AF37";
+      ctx.fillRect(-18, -42, 36, 5);
+
+      // Kopf
+      ctx.fillStyle = "#F2C49B";
+      ctx.beginPath();
+      ctx.arc(0, -80, 17, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#B8845A";
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // Haare
+      ctx.fillStyle = "#5C3A21";
+      ctx.beginPath();
+      ctx.arc(0, -83, 17.5, Math.PI * 1.02, Math.PI * 1.98);
+      ctx.quadraticCurveTo(10, -88, 0, -89);
+      ctx.quadraticCurveTo(-10, -88, -17.5, -83);
+      ctx.fill();
+
+      // Gesicht
+      ctx.fillStyle = "#1F3A52";
+      ctx.beginPath();
+      ctx.arc(-6, -80, 2.1, 0, Math.PI * 2);
+      ctx.arc(6, -80, 2.1, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = "#8B2635";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(0, -76, 5.5, 0.15 * Math.PI, 0.85 * Math.PI);
+      ctx.stroke();
+
+      // Arme
+      ctx.strokeStyle = "#F2C49B";
+      ctx.lineWidth = 7;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(-17, -58);
+      ctx.lineTo(-basketWidth * 0.36, -64);
+      ctx.moveTo(17, -58);
+      ctx.lineTo(basketWidth * 0.36, -64);
+      ctx.stroke();
+
+      // Großer Korb
+      var bTopW = basketWidth;
+      var bBotW = basketWidth * 0.72;
+      var bTopY = -76;
+      var bBotY = -44;
+
+      if (state.player.catchFlash > 0) {
+        ctx.save();
+        ctx.fillStyle = "rgba(30, 126, 78, 0.25)";
+        ctx.beginPath();
+        ctx.ellipse(0, bTopY, bTopW * 0.56, 13, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      var basketGrad = ctx.createLinearGradient(0, bTopY, 0, bBotY);
+      basketGrad.addColorStop(0, "#D97A3E");
+      basketGrad.addColorStop(1, "#A64B23");
+      ctx.fillStyle = basketGrad;
+      ctx.strokeStyle = "#6E2E12";
+      ctx.lineWidth = 2.2;
+
+      ctx.beginPath();
+      ctx.moveTo(-bTopW / 2, bTopY);
+      ctx.lineTo(bTopW / 2, bTopY);
+      ctx.lineTo(bBotW / 2, bBotY);
+      ctx.quadraticCurveTo(0, bBotY + 7, -bBotW / 2, bBotY);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.strokeStyle = "rgba(255, 243, 214, 0.45)";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(-bTopW * 0.44, bTopY + 11);
+      ctx.lineTo(bTopW * 0.44, bTopY + 11);
+      ctx.moveTo(-bTopW * 0.39, bTopY + 22);
+      ctx.lineTo(bTopW * 0.39, bTopY + 22);
+      ctx.stroke();
+
+      ctx.fillStyle = "#D4AF37";
+      ctx.strokeStyle = "#1F3A52";
+      ctx.lineWidth = 1.8;
+      ctx.beginPath();
+      ctx.roundRect(-bTopW / 2 - 4, bTopY - 4, bTopW + 8, 9, 4.5);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.restore();
+    }
+
+    function drawToken(token) {
+      var drawX = token.x + Math.sin(token.swayOffset) * 5;
+      var drawY = token.y;
+      var w = token.width;
+      var h = token.height;
+
+      ctx.save();
+      ctx.translate(drawX, drawY);
+
+      ctx.fillStyle = "rgba(31, 58, 82, 0.14)";
+      ctx.beginPath();
+      ctx.roundRect(-w / 2 + 2, -h / 2 + 4, w, h, 12);
+      ctx.fill();
+
+      var grad = ctx.createLinearGradient(0, -h / 2, 0, h / 2);
+      grad.addColorStop(0, "#FFFDF7");
+      grad.addColorStop(1, "#F5E4BE");
+      ctx.fillStyle = grad;
+      ctx.strokeStyle = "#1F3A52";
+      ctx.lineWidth = 2.2;
+
+      ctx.beginPath();
+      ctx.roundRect(-w / 2, -h / 2, w, h, 11);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = "#D4AF37";
+      ctx.strokeStyle = "#7D5E10";
+      ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      ctx.roundRect(-w / 2 - 4, -h / 2 + 5, 7, h - 10, 3);
+      ctx.roundRect(w / 2 - 3, -h / 2 + 5, 7, h - 10, 3);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = "#1E2D3B";
+      ctx.font = "bold 19px Georgia, 'Times New Roman', serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(token.word, 0, 1);
+
+      ctx.restore();
+    }
+
+    function drawEffects() {
+      for (var i = 0; i < state.particles.length; i++) {
+        var p = state.particles[i];
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, p.life);
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      for (var j = 0; j < state.floatingTexts.length; j++) {
+        var ft = state.floatingTexts[j];
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, ft.life);
+        ctx.font = "800 17px -apple-system, BlinkMacSystemFont, sans-serif";
+        ctx.textAlign = "center";
+        ctx.strokeStyle = "#FFF";
+        ctx.lineWidth = 4;
+        ctx.strokeText(ft.text, ft.x, ft.y);
+        ctx.fillStyle = ft.color;
+        ctx.fillText(ft.text, ft.x, ft.y);
+        ctx.restore();
+      }
+    }
+
+    function render() {
+      drawBackground();
+      for (var i = 0; i < state.tokens.length; i++) {
+        drawToken(state.tokens[i]);
+      }
+      drawRomanCharacter();
+      drawEffects();
+    }
+
+    function gameLoop(timestamp) {
+      if (!state.lastFrameTime) state.lastFrameTime = timestamp;
+      var dt = Math.min(0.05, (timestamp - state.lastFrameTime) / 1000);
+      state.lastFrameTime = timestamp;
+
+      update(dt);
+      render();
+      requestAnimationFrame(gameLoop);
+    }
+
+    bindButtonListeners();
+    resizeCanvas();
+    requestAnimationFrame(gameLoop);
+  </script>
+</body>
+</html>
